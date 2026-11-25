@@ -13,9 +13,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
     "drizzle-orm": "^0.45.4",
     "next": "^15.5.28",
+    "pino": "9.14.0",
     "postgres": "^3.4.7",
+    "qrcode": "1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
