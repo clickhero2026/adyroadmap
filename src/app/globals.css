@@ -201,3 +201,12 @@ button.perigo { background: var(--late); border-color: var(--late); color: #fff;
 .tabela-usuarios form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .tabela-usuarios select, .tabela-usuarios input { width: auto; }
 .rolagem { overflow-x: auto; }
+
+/* Janela (prazo ao mover tarefa) */
+dialog.janela { border: 1px solid var(--line); border-radius: 14px; padding: 20px; width: min(420px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: 0 20px 50px rgba(20, 30, 50, .18); }
+dialog.janela::backdrop { background: rgba(20, 30, 50, .35); }
+dialog.janela form { display: grid; gap: 12px; }
+dialog.janela h3 { margin: 0; font-size: 18px; }
+dialog.janela p { margin: 0; }
+dialog.janela .atalhos { display: flex; flex-wrap: wrap; gap: 6px; }
+button.chip { padding: 4px 10px; font-size: 13px; border-radius: 99px; }

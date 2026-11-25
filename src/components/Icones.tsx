@@ -80,7 +80,51 @@ const PATHS: Record<string, React.ReactNode> = {
   ),
 };
 
-export function IconeArea({ area, size = 22 }: { area: string; size?: number }) {
+// Ícones extras para áreas novas (escolhidos na tela de Áreas).
+const EXTRAS: Record<string, React.ReactNode> = {
+  "Segurança": (
+    <>
+      <path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z" />
+      <path d="M9 12l2.2 2.2L15.5 10" />
+    </>
+  ),
+  Infraestrutura: (
+    <>
+      <rect x="3.5" y="4" width="17" height="6.5" rx="1.5" />
+      <rect x="3.5" y="13.5" width="17" height="6.5" rx="1.5" />
+      <path d="M7 7.2h.01M7 16.7h.01" />
+    </>
+  ),
+  "Dados e relatórios": (
+    <>
+      <ellipse cx="12" cy="5.5" rx="7.5" ry="2.5" />
+      <path d="M4.5 5.5v13c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-13" />
+      <path d="M4.5 12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5" />
+    </>
+  ),
+  "Integrações": (
+    <>
+      <path d="M9 3v4M15 3v4" />
+      <path d="M6.5 7h11v4a5.5 5.5 0 01-11 0z" />
+      <path d="M12 16.5V21" />
+    </>
+  ),
+  Suporte: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5" />
+    </>
+  ),
+  "Geral": <circle cx="12" cy="12" r="8" />,
+};
+
+const TODOS = { ...PATHS, ...EXTRAS };
+
+/** Opções para a escolha de ícone na tela de Áreas. */
+export const ICONES = Object.keys(TODOS);
+
+export function IconeArea({ area, icone, size = 22 }: { area: string; icone?: string | null; size?: number }) {
   return (
     <svg
       width={size}
@@ -93,7 +137,7 @@ export function IconeArea({ area, size = 22 }: { area: string; size?: number }) 
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {PATHS[area] ?? <circle cx="12" cy="12" r="8" />}
+      {TODOS[icone ?? ""] ?? TODOS[area] ?? <circle cx="12" cy="12" r="8" />}
     </svg>
   );
 }

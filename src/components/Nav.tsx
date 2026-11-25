@@ -6,6 +6,7 @@ const ITENS = [
   ["/app/tarefas", "Tarefas", true],
   ["/app/diretores", "Diretores", false],
   ["/app/roadmap", "Roadmap interno", false],
+  ["/app/areas", "Áreas", true],
   ["/app/usuarios", "Usuários", true],
 ] as const;
 

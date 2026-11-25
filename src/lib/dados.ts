@@ -3,13 +3,14 @@ import { db } from "./db";
 import { hashSenha } from "../../scripts/lib/senha.mjs";
 import { STATUS_TAREFA, type StatusTarefa } from "./rotulos";
 
-export type Area = { id: number; nome: string; ordem: number; pct: number; objetivos: number; entregues: number };
+export type Area = { id: number; nome: string; ordem: number; icone: string | null; pct: number; objetivos: number; entregues: number };
 
 export type Objetivo = {
   id: number;
   area_id: number;
   area_nome: string;
   area_ordem: number;
+  area_icone: string | null;
   nome: string;
   tipo: string;
   prioridade: string;
@@ -51,20 +52,20 @@ export type Tarefa = {
 };
 
 export async function listarAreas() {
-  return db()<Area[]>`SELECT * FROM v_areas ORDER BY ordem`;
+  return db()<Area[]>`SELECT v.*, a.icone FROM v_areas v JOIN areas a USING (id) ORDER BY v.ordem, v.nome`;
 }
 
 export async function listarObjetivos() {
-  return db()<Objetivo[]>`SELECT * FROM v_objetivos ORDER BY area_ordem, prioridade, nome`;
+  return db()<Objetivo[]>`SELECT o.*, a.icone AS area_icone FROM v_objetivos o JOIN areas a ON a.id = o.area_id ORDER BY o.area_ordem, o.prioridade, o.nome`;
 }
 
 /** Roadmap público: só o que está marcado como público, sem cancelados nem notas internas. */
 export async function listarObjetivosPublicos() {
-  return db()<Pick<Objetivo, "id" | "nome" | "area_nome" | "area_ordem" | "descricao_publica" | "fase">[]>`
-    SELECT id, nome, area_nome, area_ordem, descricao_publica, fase
-    FROM v_objetivos
-    WHERE publico AND status <> 'cancelado'
-    ORDER BY area_ordem, nome`;
+  return db()<Pick<Objetivo, "id" | "nome" | "area_nome" | "area_ordem" | "area_icone" | "descricao_publica" | "fase">[]>`
+    SELECT o.id, o.nome, o.area_nome, o.area_ordem, a.icone AS area_icone, o.descricao_publica, o.fase
+    FROM v_objetivos o JOIN areas a ON a.id = o.area_id
+    WHERE o.publico AND o.status <> 'cancelado'
+    ORDER BY o.area_ordem, o.nome`;
 }
 
 export async function buscarObjetivo(id: number) {
@@ -305,4 +306,40 @@ export async function excluirUsuario(id: number, quemPede: number) {
     const [{ n }] = await tx<{ n: number }[]>`SELECT count(*)::int AS n FROM usuarios WHERE papel = 'admin'`;
     if (n === 0) throw new ErroValidacao("O sistema precisa de pelo menos um admin");
   });
+}
+
+// ---------- áreas ----------
+
+function dadosArea(d: Record<string, unknown>) {
+  const nome = texto(d.nome, 80);
+  if (!nome) throw new ErroValidacao("A área precisa de um nome");
+  const ordem = Number(d.ordem ?? 0);
+  if (!Number.isInteger(ordem) || ordem < 0 || ordem > 999) throw new ErroValidacao("Ordem deve ser um número de 0 a 999");
+  return { nome, ordem, icone: texto(d.icone, 60) };
+}
+
+async function nomeLivre(nome: string, id: number | null) {
+  const [r] = await db()`SELECT 1 FROM areas WHERE lower(nome) = lower(${nome}) AND id <> ${id ?? 0}`;
+  if (r) throw new ErroValidacao(`Já existe uma área chamada ${nome}`);
+}
+
+export async function criarArea(d: Record<string, unknown>) {
+  const v = dadosArea(d);
+  await nomeLivre(v.nome, null);
+  const sql = db();
+  await sql`INSERT INTO areas ${sql(v)}`;
+}
+
+export async function atualizarArea(id: number, d: Record<string, unknown>) {
+  const v = dadosArea(d);
+  await nomeLivre(v.nome, id);
+  const sql = db();
+  await sql`UPDATE areas SET ${sql(v)} WHERE id = ${id}`;
+}
+
+/** Só apaga área vazia; objetivos precisam ser movidos ou excluídos antes. */
+export async function excluirArea(id: number) {
+  const [{ n }] = await db()<{ n: number }[]>`SELECT count(*)::int AS n FROM objetivos WHERE area_id = ${id}`;
+  if (n > 0) throw new ErroValidacao(`A área ainda tem ${n} objetivo(s). Mova ou exclua os objetivos antes.`);
+  await db()`DELETE FROM areas WHERE id = ${id}`;
 }

@@ -7,6 +7,7 @@ export type ItemRoadmap = {
   nome: string;
   area_nome: string;
   area_ordem: number;
+  area_icone?: string | null;
   descricao_publica: string | null;
   fase: string;
   // só na visão interna
@@ -68,7 +69,7 @@ function Cartao({ i, interno, editavel }: { i: ItemRoadmap; interno: boolean; ed
   return (
     <article className={`card fase-${i.fase}`}>
       <span className="area">
-        <IconeArea area={i.area_nome} size={15} />
+        <IconeArea area={i.area_nome} icone={i.area_icone} size={15} />
         {i.area_nome}
       </span>
       <h4>{editavel ? <Link href={`/app/objetivos/${i.id}`}>{i.nome}</Link> : i.nome}</h4>
@@ -133,7 +134,7 @@ export function Panorama({ itens, interno }: { itens: ItemRoadmap[]; interno: bo
           return (
             <Link key={area} href={`${base}?por=area#${slug(area)}`} className="area-tile">
               <span className="area-icone">
-                <IconeArea area={area} />
+                <IconeArea area={area} icone={itens.find((i) => i.area_nome === area)?.area_icone} />
               </span>
               <span className="area-nome">{area}</span>
               <span className="area-conta">
@@ -216,7 +217,7 @@ export function QuadroPorArea({
           <section key={area} id={slug(area)} className="area-card">
             <div className="area-card-head">
               <span className="area-icone">
-                <IconeArea area={area} />
+                <IconeArea area={area} icone={itens.find((i) => i.area_nome === area)?.area_icone} />
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3>{area}</h3>
