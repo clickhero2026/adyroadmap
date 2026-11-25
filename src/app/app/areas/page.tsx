@@ -1,8 +1,9 @@
 // Áreas do roadmap (só admin): criar, renomear, mudar ordem e ícone, excluir área vazia.
-// Objetivos são criados e editados na tela de cada objetivo (Roadmap interno → Novo objetivo).
+// Objetivos de cada área aparecem aqui, com links para editar e para criar um novo já na área.
 import Link from "next/link";
 import { exigirAdmin } from "@/lib/auth";
 import { listarAreas, listarObjetivos } from "@/lib/dados";
+import { STATUS_OBJETIVO } from "@/lib/rotulos";
 import { ICONES, IconeArea } from "@/components/Icones";
 import { acaoAtualizarArea, acaoCriarArea, acaoExcluirArea } from "../actions";
 
@@ -18,18 +19,18 @@ export default async function Areas({ searchParams }: { searchParams: Promise<{ 
   await exigirAdmin();
   const { erro } = await searchParams;
   const [areas, objetivos] = await Promise.all([listarAreas(), listarObjetivos()]);
-  const total = (id: number) => objetivos.filter((o) => o.area_id === id).length;
+  const daArea = (id: number) => objetivos.filter((o) => o.area_id === id);
+  const total = (id: number) => daArea(id).length;
   const proximaOrdem = Math.max(0, ...areas.map((a) => a.ordem)) + 1;
 
   return (
     <div className="wrap" style={{ maxWidth: 1000 }}>
       <header className="cabecalho">
         <div>
-          <h1>Áreas</h1>
+          <h1>Áreas e objetivos</h1>
           <p>
-            As áreas agrupam os objetivos no roadmap. Para criar ou mudar objetivos, use{" "}
-            <Link href="/app/objetivos/novo">Novo objetivo</Link> ou abra o objetivo no{" "}
-            <Link href="/app/roadmap">Roadmap interno</Link>.
+            Clique em “objetivos” numa área para ver, editar ou criar objetivos dela. Clique no nome de um objetivo para
+            editar ou excluir.
           </p>
         </div>
       </header>
@@ -64,8 +65,23 @@ export default async function Areas({ searchParams }: { searchParams: Promise<{ 
                     <button type="submit">Salvar</button>
                   </form>
                 </td>
-                <td className="small">
-                  <Link href={`/app/roadmap?por=area`}>{total(a.id)}</Link>
+                <td className="small" style={{ minWidth: 240 }}>
+                  <details className="objetivos-area">
+                    <summary>
+                      {total(a.id)} {total(a.id) === 1 ? "objetivo" : "objetivos"}
+                    </summary>
+                    <ul>
+                      {daArea(a.id).map((o) => (
+                        <li key={o.id}>
+                          <Link href={`/app/objetivos/${o.id}`}>{o.nome}</Link>{" "}
+                          <span className={`badge ${STATUS_OBJETIVO[o.status].cor}`}>{STATUS_OBJETIVO[o.status].nome}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link className="btn" href={`/app/objetivos/novo?area=${a.id}`}>
+                      + Novo objetivo nesta área
+                    </Link>
+                  </details>
                 </td>
                 <td>
                   {total(a.id) === 0 && (
@@ -85,6 +101,12 @@ export default async function Areas({ searchParams }: { searchParams: Promise<{ 
           A ordem define a sequência no roadmap (menor primeiro). Só dá para excluir área sem objetivos.
         </p>
       </section>
+
+      <p>
+        <Link className="btn primario" href="/app/objetivos/novo">
+          + Novo objetivo
+        </Link>
+      </p>
 
       <h2>Nova área</h2>
       <form action={acaoCriarArea} className="form">

@@ -253,3 +253,7 @@ pre.whats { white-space: pre-wrap; font-family: var(--font-body, inherit); font-
 .qr-bloco img { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 8px; max-width: 100%; height: auto; }
 .qr-bloco ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 420px; }
 .badge.done { color: var(--done); background: color-mix(in srgb, var(--done) 10%, transparent); }
+/* Objetivos dentro da tela de áreas */
+.objetivos-area summary { cursor: pointer; color: var(--doing); font-weight: 500; }
+.objetivos-area ul { margin: 8px 0; padding-left: 18px; display: grid; gap: 6px; }
+.objetivos-area .btn { font-size: 13px; padding: 4px 10px; }
