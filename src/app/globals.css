@@ -210,3 +210,8 @@ dialog.janela h3 { margin: 0; font-size: 18px; }
 dialog.janela p { margin: 0; }
 dialog.janela .atalhos { display: flex; flex-wrap: wrap; gap: 6px; }
 button.chip { padding: 4px 10px; font-size: 13px; border-radius: 99px; }
+
+/* Objetivos dentro da tela de áreas */
+.objetivos-area summary { cursor: pointer; color: var(--doing); font-weight: 500; }
+.objetivos-area ul { margin: 8px 0; padding-left: 18px; display: grid; gap: 6px; }
+.objetivos-area .btn { font-size: 13px; padding: 4px 10px; }

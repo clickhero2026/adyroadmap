@@ -2,7 +2,7 @@ import type { Area, Objetivo } from "@/lib/dados";
 import { MARCACOES, TIPOS } from "@/lib/rotulos";
 import { acaoSalvarObjetivo } from "@/app/app/actions";
 
-export function FormObjetivo({ o, areas }: { o?: Objetivo | null; areas: Area[] }) {
+export function FormObjetivo({ o, areas, areaInicial }: { o?: Objetivo | null; areas: Area[]; areaInicial?: number }) {
   return (
     <form action={acaoSalvarObjetivo} className="form">
       {o && <input type="hidden" name="id" value={o.id} />}
@@ -13,7 +13,7 @@ export function FormObjetivo({ o, areas }: { o?: Objetivo | null; areas: Area[] 
       <div className="linha">
         <label>
           Área
-          <select name="area_id" defaultValue={o?.area_id ?? ""} required>
+          <select name="area_id" defaultValue={o?.area_id ?? areaInicial ?? ""} required>
             <option value="" disabled>
               Escolha…
             </option>
