@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FASES, STATUS_OBJETIVO, nomeMarcacao } from "@/lib/rotulos";
+import { IconeArea } from "./Icones";
 
 export type ItemRoadmap = {
   id: number;
@@ -16,6 +17,81 @@ export type ItemRoadmap = {
   publico?: boolean;
 };
 
+const ORDEM_FASES = ["entregue", "em_andamento", "previsto"] as const;
+
+function slug(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function contar(itens: ItemRoadmap[]) {
+  const c = { entregue: 0, em_andamento: 0, previsto: 0 } as Record<(typeof ORDEM_FASES)[number], number>;
+  for (const i of itens) if (i.fase in c) c[i.fase as keyof typeof c]++;
+  return c;
+}
+
+function areasDe(itens: ItemRoadmap[]) {
+  return [...new Map(itens.map((i) => [i.area_nome, i.area_ordem])).entries()]
+    .sort((a, b) => a[1] - b[1])
+    .map(([nome]) => nome);
+}
+
+// ---------- pedaços visuais ----------
+
+/** Rosca com a proporção de cada fase; no centro, o % disponível. */
+function Rosca({ itens }: { itens: ItemRoadmap[] }) {
+  const c = contar(itens);
+  const total = itens.length || 1;
+  const r = 52;
+  const circ = 2 * Math.PI * r;
+  let inicio = 0;
+  const pct = Math.round((100 * c.entregue) / total);
+  return (
+    <svg viewBox="0 0 140 140" className="rosca" role="img" aria-label={`${pct}% já disponível`}>
+      <circle cx="70" cy="70" r={r} fill="none" stroke="var(--line)" strokeWidth="16" />
+      {ORDEM_FASES.map((k) => {
+        const len = (c[k] / total) * circ;
+        const el = (
+          <circle
+            key={k}
+            cx="70"
+            cy="70"
+            r={r}
+            fill="none"
+            className={`arco-${k}`}
+            strokeWidth="16"
+            strokeDasharray={`${Math.max(len - 2, 0)} ${circ}`}
+            strokeDashoffset={-inicio}
+            transform="rotate(-90 70 70)"
+          />
+        );
+        inicio += len;
+        return el;
+      })}
+      <text x="70" y="70" textAnchor="middle" className="rosca-n">
+        {pct}%
+      </text>
+      <text x="70" y="90" textAnchor="middle" className="rosca-l">
+        disponível
+      </text>
+    </svg>
+  );
+}
+
+/** Barra segmentada entregue / em andamento / previsto. */
+function BarraFases({ itens, alta = false }: { itens: ItemRoadmap[]; alta?: boolean }) {
+  const c = contar(itens);
+  return (
+    <div className={`bar${alta ? "" : " fina"}`} role="img" aria-label={`${c.entregue} entregues, ${c.em_andamento} em andamento, ${c.previsto} previstos`}>
+      {ORDEM_FASES.map((k) => (c[k] ? <span key={k} className={`b-${k}`} style={{ flex: c[k] }} /> : null))}
+    </div>
+  );
+}
+
 function Selos({ i }: { i: ItemRoadmap }) {
   if (!i.status) return null;
   const s = STATUS_OBJETIVO[i.status];
@@ -24,14 +100,17 @@ function Selos({ i }: { i: ItemRoadmap }) {
   if (mostrarStatus) selos.push(<span key="s" className={`badge ${s.cor}`}>{s.nome}</span>);
   if (i.marcacao && i.marcacao !== "adiado") selos.push(<span key="m" className="badge warn">{nomeMarcacao[i.marcacao]}</span>);
   if (i.fase === "em_andamento" && typeof i.pct === "number") selos.push(<span key="p" className="badge mute">{i.pct}%</span>);
-  if (i.publico === false) selos.push(<span key="pub" className="badge mute">Fora do público</span>);
+  if (i.publico === false) selos.push(<span key="pub" className="badge mute">Só interno</span>);
   return selos.length ? <div className="badges">{selos}</div> : null;
 }
 
 function Cartao({ i, interno }: { i: ItemRoadmap; interno: boolean }) {
   return (
-    <article className="card">
-      <span className="area">{i.area_nome}</span>
+    <article className={`card fase-${i.fase}`}>
+      <span className="area">
+        <IconeArea area={i.area_nome} size={15} />
+        {i.area_nome}
+      </span>
       <h4>{interno ? <Link href={`/app/objetivos/${i.id}`}>{i.nome}</Link> : i.nome}</h4>
       {i.descricao_publica && <p>{i.descricao_publica}</p>}
       {interno && <Selos i={i} />}
@@ -44,42 +123,82 @@ function Cartao({ i, interno }: { i: ItemRoadmap; interno: boolean }) {
   );
 }
 
+// ---------- blocos da página ----------
+
 export function Resumo({ itens, interno }: { itens: ItemRoadmap[]; interno: boolean }) {
   const fases = FASES[interno ? "interna" : "publica"];
-  const n = (k: string) => itens.filter((i) => i.fase === k).length;
+  const c = contar(itens);
   const atrasados = itens.filter((i) => i.status === "atrasado").length;
   const emRisco = itens.filter((i) => i.status === "em_risco").length;
   return (
-    <section className="summary" aria-label="Resumo">
-      <h2>
-        {n("entregue")} de {itens.length} funcionalidades já estão no ady
-      </h2>
-      <div className="bar" role="img" aria-label="Proporção por situação">
-        {fases.map((f) => (
-          <span key={f.k} className={`b-${f.k}`} style={{ flex: n(f.k) }} title={`${n(f.k)}`} />
-        ))}
-      </div>
-      <div className="tiles">
-        {fases.map((f, idx) => (
-          <div key={f.k} className={`tile ${["done", "ok", "mute"][idx]}`}>
-            <div className="n">{n(f.k)}</div>
-            <div className="l">{f.nome}</div>
-          </div>
-        ))}
-        {interno && (
-          <>
-            <div className="tile late">
-              <div className="n">{atrasados}</div>
-              <div className="l">Atrasados</div>
+    <section className="summary resumo" aria-label="Resumo">
+      <Rosca itens={itens} />
+      <div className="resumo-texto">
+        <h2>
+          {c.entregue} de {itens.length} funcionalidades já estão no ady
+        </h2>
+        <div className="tiles">
+          {fases.map((f) => (
+            <div key={f.k} className={`tile fase-${f.k}`}>
+              <div className="n">{c[f.k as keyof typeof c]}</div>
+              <div className="l">{f.nome}</div>
             </div>
-            <div className="tile warn">
-              <div className="n">{emRisco}</div>
-              <div className="l">Em risco</div>
-            </div>
-          </>
-        )}
+          ))}
+          {interno && (
+            <>
+              <div className="tile late">
+                <div className="n">{atrasados}</div>
+                <div className="l">Atrasados</div>
+              </div>
+              <div className="tile warn">
+                <div className="n">{emRisco}</div>
+                <div className="l">Em risco</div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </section>
+  );
+}
+
+/** Uma ficha por área: ícone, quantas já estão disponíveis e a barra das fases. */
+export function Panorama({ itens, interno }: { itens: ItemRoadmap[]; interno: boolean }) {
+  const base = interno ? "/app/roadmap" : "/";
+  return (
+    <section aria-label="Panorama por área">
+      <h2 className="secao">Por área</h2>
+      <div className="panorama">
+        {areasDe(itens).map((area) => {
+          const lista = itens.filter((i) => i.area_nome === area);
+          const c = contar(lista);
+          return (
+            <Link key={area} href={`${base}?por=area#${slug(area)}`} className="area-tile">
+              <span className="area-icone">
+                <IconeArea area={area} />
+              </span>
+              <span className="area-nome">{area}</span>
+              <span className="area-conta">
+                <b>{c.entregue}</b> de {lista.length} {interno ? "entregues" : "disponíveis"}
+              </span>
+              <BarraFases itens={lista} />
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export function Legenda({ interno }: { interno: boolean }) {
+  return (
+    <div className="legenda" aria-hidden="true">
+      {FASES[interno ? "interna" : "publica"].map((f) => (
+        <span key={f.k}>
+          <span className={`dot ${f.k}`} /> {f.nome}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -112,15 +231,26 @@ export function QuadroPorFase({ itens, interno }: { itens: ItemRoadmap[]; intern
 export function QuadroPorArea({ itens, interno }: { itens: ItemRoadmap[]; interno: boolean }) {
   const fases = FASES[interno ? "interna" : "publica"];
   const nomeFase = Object.fromEntries(fases.map((f) => [f.k, f.nome]));
-  const areas = [...new Map(itens.map((i) => [i.area_nome, i.area_ordem])).entries()].sort((a, b) => a[1] - b[1]);
   return (
     <div className="areas">
-      {areas.map(([area]) => (
-        <section key={area} className="area-card">
-          <h3>{area}</h3>
-          {itens
-            .filter((i) => i.area_nome === area)
-            .map((i) => (
+      {areasDe(itens).map((area) => {
+        const lista = itens.filter((i) => i.area_nome === area);
+        const c = contar(lista);
+        return (
+          <section key={area} id={slug(area)} className="area-card">
+            <div className="area-card-head">
+              <span className="area-icone">
+                <IconeArea area={area} />
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3>{area}</h3>
+                <span className="small muted">
+                  {c.entregue} de {lista.length} {interno ? "entregues" : "disponíveis"}
+                </span>
+              </div>
+            </div>
+            <BarraFases itens={lista} />
+            {lista.map((i) => (
               <div key={i.id} className="row">
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <span className={`dot ${i.fase}`} style={{ marginTop: 7 }} />
@@ -130,9 +260,7 @@ export function QuadroPorArea({ itens, interno }: { itens: ItemRoadmap[]; intern
                     </div>
                     {i.descricao_publica && <div className="muted small">{i.descricao_publica}</div>}
                   </div>
-                  <span className="muted small" style={{ whiteSpace: "nowrap" }}>
-                    {nomeFase[i.fase]}
-                  </span>
+                  <span className={`pill fase-${i.fase}`}>{nomeFase[i.fase]}</span>
                 </div>
                 {interno && <Selos i={i} />}
                 {interno && i.nota_interna && (
@@ -142,8 +270,9 @@ export function QuadroPorArea({ itens, interno }: { itens: ItemRoadmap[]; intern
                 )}
               </div>
             ))}
-        </section>
-      ))}
+          </section>
+        );
+      })}
     </div>
   );
 }

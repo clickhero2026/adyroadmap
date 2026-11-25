@@ -1,7 +1,7 @@
 // Roadmap interno: mesmo quadro do público, com status calculado, marcações e notas internas.
 import Link from "next/link";
 import { listarObjetivos } from "@/lib/dados";
-import { QuadroPorArea, QuadroPorFase, Resumo } from "@/components/Roadmap";
+import { Legenda, Panorama, QuadroPorArea, QuadroPorFase, Resumo } from "@/components/Roadmap";
 
 export default async function RoadmapInterno({ searchParams }: { searchParams: Promise<{ por?: string }> }) {
   const { por } = await searchParams;
@@ -29,6 +29,8 @@ export default async function RoadmapInterno({ searchParams }: { searchParams: P
         </div>
       </header>
       <Resumo itens={itens} interno />
+      <Panorama itens={itens} interno />
+      <Legenda interno />
       {porArea ? <QuadroPorArea itens={itens} interno /> : <QuadroPorFase itens={itens} interno />}
     </div>
   );

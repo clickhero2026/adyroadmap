@@ -7,6 +7,7 @@
 // - "Em andamento" -> iniciado_em = 23/11/2026 (ainda não há tarefas registradas)
 // - "Previsto" -> sem datas
 // - selos: adiado -> marcação Adiado; a confirmar -> A confirmar; a rever -> A rever
+// - Conta, planos, pagamentos, onboarding e conversão ficam fora do público (informação interna)
 // - "atrasado" passa a ser calculado pelo prazo; onde o prazo é conhecido, ele foi preenchido
 
 export const AREAS = [
@@ -77,10 +78,10 @@ export const OBJETIVOS = [
   { area: 8, nome: "Gestão de várias marcas ou clientes", descricao_publica: "Uma conta cuidando de várias marcas." },
 
   // Conta
-  { area: 9, nome: "Criar conta pelo site", descricao_publica: "Crie sua conta e comece a usar.", ...done() },
-  { area: 9, nome: "Planos e assinaturas", descricao_publica: "Escolha o plano que cabe no seu bolso.", ...doing(), nota_interna: "Marcado como atrasado no roadmap de 23/11. Definir o prazo para o status ser calculado." },
-  { area: 9, nome: "Aviso de plano ativo ou vencido", descricao_publica: "Um aviso claro sobre a situação do seu plano.", marcacao: "a_confirmar", nota_interna: "O bloqueio de assinatura vencida existe. O aviso visual para o usuário não foi confirmado." },
-  { area: 9, nome: "Pagamento e troca de plano automáticos", descricao_publica: "Pagar e mudar de plano direto na plataforma, sem etapas manuais." },
+  { area: 9, nome: "Criar conta pelo site", descricao_publica: "Crie sua conta e comece a usar.", ...done() , publico: false},
+  { area: 9, nome: "Planos e assinaturas", descricao_publica: "Escolha o plano que cabe no seu bolso.", ...doing(), nota_interna: "Marcado como atrasado no roadmap de 23/11. Definir o prazo para o status ser calculado." , publico: false},
+  { area: 9, nome: "Aviso de plano ativo ou vencido", descricao_publica: "Um aviso claro sobre a situação do seu plano.", marcacao: "a_confirmar", nota_interna: "O bloqueio de assinatura vencida existe. O aviso visual para o usuário não foi confirmado." , publico: false},
+  { area: 9, nome: "Pagamento e troca de plano automáticos", descricao_publica: "Pagar e mudar de plano direto na plataforma, sem etapas manuais." , publico: false},
 
   // Experiência
   { area: 10, nome: "Nova identidade visual", descricao_publica: "O ady moderno, escuro e elegante, igual em toda a plataforma.", ...done() },
@@ -93,8 +94,8 @@ export const OBJETIVOS = [
   { area: 11, nome: "Agente de vendas Bia no WhatsApp", descricao_publica: "Atendimento e qualificação dos leads pelo WhatsApp.", ...doing(), publico: false, nota_interna: "Pronta, falta testar." },
 
   // Prioridades da reunião de 23/11/2026
-  { area: 10, nome: "Novo fluxo de onboarding (MEI e não MEI)", prioridade: "P1", responsavel: "Rafael", descricao_publica: "Um passo a passo simples, do anúncio até o primeiro post publicado.", ...doing(), nota_interna: "Prioridade 1 da reunião de 23/11. Substitui a landing page." },
-  { area: 9, nome: "Pontos de conversão no app", prioridade: "P1", responsavel: "Rafael", descricao_publica: "Ofertas claras para assinar na hora certa, sem atrapalhar o uso.", nota_interna: "Prioridade 2 da reunião de 23/11: faixas e pop-ups de upgrade e contratação." },
+  { area: 10, nome: "Novo fluxo de onboarding (MEI e não MEI)", prioridade: "P1", responsavel: "Rafael", descricao_publica: "Um passo a passo simples, do anúncio até o primeiro post publicado.", ...doing(), nota_interna: "Prioridade 1 da reunião de 23/11. Substitui a landing page." , publico: false},
+  { area: 9, nome: "Pontos de conversão no app", prioridade: "P1", responsavel: "Rafael", descricao_publica: "Ofertas claras para assinar na hora certa, sem atrapalhar o uso.", nota_interna: "Prioridade 2 da reunião de 23/11: faixas e pop-ups de upgrade e contratação." , publico: false},
 ];
 
 // Tarefas iniciais (sem prazo: Rafael define). Chave = nome do objetivo.

@@ -18,7 +18,7 @@ export async function seedSeVazio(url = process.env.DATABASE_URL) {
         areaIds.push(a.id);
       }
       for (const { area, ...o } of OBJETIVOS) {
-        const [row] = await tx`INSERT INTO objetivos ${tx({ ...o, area_id: areaIds[area] })} RETURNING id`;
+        const [row] = await tx`INSERT INTO objetivos ${tx({ publico: true, ...o, area_id: areaIds[area] })} RETURNING id`;
         for (const t of TAREFAS[o.nome] ?? []) {
           await tx`INSERT INTO tarefas ${tx({ ...t, objetivo_id: row.id, criada_em: CRIADA_EM })}`;
         }

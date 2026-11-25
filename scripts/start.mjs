@@ -11,6 +11,24 @@ if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
   throw new Error("SESSION_SECRET precisa ter 32 caracteres ou mais");
 }
 
+// Espera o Postgres aceitar conexões (no boot da VPS o app pode subir antes do banco).
+async function esperarBanco(tentativas = 30) {
+  for (let i = 1; ; i++) {
+    const c = postgres(url, { max: 1, connect_timeout: 5, onnotice: () => {} });
+    try {
+      await c`SELECT 1`;
+      return;
+    } catch (e) {
+      if (i >= tentativas) throw e;
+      console.log(`Banco ainda não respondeu (${i}/${tentativas}): ${e.code ?? e.message}. Tentando de novo em 2 s…`);
+      await new Promise((r) => setTimeout(r, 2000));
+    } finally {
+      await c.end({ timeout: 1 }).catch(() => {});
+    }
+  }
+}
+
+await esperarBanco();
 await runMigrations(url);
 if (await seedSeVazio(url)) console.log("Carga inicial feita.");
 

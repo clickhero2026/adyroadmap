@@ -71,7 +71,7 @@ export function FormObjetivo({ o, areas }: { o?: Objetivo | null; areas: Area[] 
       </label>
       <div className="linha">
         <label className="check">
-          <input type="checkbox" name="publico" defaultChecked={o?.publico ?? true} />
+          <input type="checkbox" name="publico" defaultChecked={o?.publico ?? false} />
           Aparece no roadmap público
         </label>
         <label>
