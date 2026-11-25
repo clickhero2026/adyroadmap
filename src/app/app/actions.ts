@@ -1,13 +1,17 @@
 "use server";
-// Ações das telas internas. Cada uma confere o login antes de gravar.
+// Ações das telas internas. Cada uma confere se quem pede é admin antes de gravar.
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { exigirUsuario } from "@/lib/auth";
+import { exigirAdmin } from "@/lib/auth";
 import {
   ErroValidacao,
   atualizarTarefa,
   criarTarefa,
+  atualizarUsuario,
+  criarUsuario,
+  excluirObjetivo,
   excluirTarefa,
+  excluirUsuario,
   marcarEntregue,
   salvarObjetivo,
 } from "@/lib/dados";
@@ -21,7 +25,7 @@ function voltar(destino: string, erro?: string): never {
 }
 
 async function tentar(destino: string, fn: () => Promise<unknown>) {
-  await exigirUsuario();
+  await exigirAdmin();
   try {
     await fn();
   } catch (e) {
@@ -47,10 +51,34 @@ export async function acaoMudarStatus(form: FormData) {
   await tentar(destinoDe(form, "/app/tarefas"), () => atualizarTarefa(id, { status: form.get("status") }));
 }
 
+/** Usado pelo quadro de tarefas (arrastar ou trocar no menu): responde sem redirecionar. */
+export async function acaoMoverTarefa(id: number, status: string): Promise<{ erro?: string }> {
+  await exigirAdmin();
+  try {
+    await atualizarTarefa(id, { status });
+  } catch (e) {
+    if (e instanceof ErroValidacao) return { erro: e.message };
+    throw e;
+  }
+  revalidatePath("/", "layout");
+  return {};
+}
+
 export async function acaoSalvarTarefa(form: FormData) {
   const id = Number(form.get("id"));
   const { id: _id, _voltar, ...d } = campos(form);
-  await tentar(destinoDe(form, `/app/tarefas/${id}`), () => atualizarTarefa(id, d));
+  await exigirAdmin();
+  try {
+    await atualizarTarefa(id, d);
+  } catch (e) {
+    // Erro: fica na tela da tarefa para corrigir.
+    if (e instanceof ErroValidacao) {
+      voltar(`/app/tarefas/${id}?voltar=${encodeURIComponent(destinoDe(form, "/app/tarefas"))}`, e.message);
+    }
+    throw e;
+  }
+  // Salvou: volta para o quadro (ou para onde a pessoa estava).
+  voltar(destinoDe(form, "/app/tarefas"));
 }
 
 export async function acaoExcluirTarefa(form: FormData) {
@@ -63,7 +91,7 @@ export async function acaoSalvarObjetivo(form: FormData) {
   const id = Number.isInteger(idBruto) && idBruto > 0 ? idBruto : null;
   const d = campos(form);
   d.publico = form.get("publico") ?? "";
-  await exigirUsuario();
+  await exigirAdmin();
   let novoId = id;
   try {
     novoId = await salvarObjetivo(id, d);
@@ -78,4 +106,25 @@ export async function acaoMarcarEntregue(form: FormData) {
   const id = Number(form.get("id"));
   const entregue = form.get("entregue") === "1";
   await tentar(`/app/objetivos/${id}`, () => marcarEntregue(id, entregue));
+}
+
+export async function acaoExcluirObjetivo(form: FormData) {
+  const id = Number(form.get("id"));
+  if (form.get("confirmo") !== "sim") voltar(`/app/objetivos/${id}`, "Marque a confirmação para excluir o objetivo");
+  await tentar("/app/roadmap", () => excluirObjetivo(id));
+}
+
+export async function acaoCriarUsuario(form: FormData) {
+  await tentar("/app/usuarios", () => criarUsuario(campos(form)));
+}
+
+export async function acaoAtualizarUsuario(form: FormData) {
+  const id = Number(form.get("id"));
+  await tentar("/app/usuarios", () => atualizarUsuario(id, campos(form)));
+}
+
+export async function acaoExcluirUsuario(form: FormData) {
+  const id = Number(form.get("id"));
+  const eu = await exigirAdmin();
+  await tentar("/app/usuarios", () => excluirUsuario(id, eu.id));
 }

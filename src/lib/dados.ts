@@ -1,5 +1,6 @@
 // Leitura das views e escrita nas tabelas. Usado pelas telas, pelas server actions e pela API.
 import { db } from "./db";
+import { hashSenha } from "../../scripts/lib/senha.mjs";
 import { STATUS_TAREFA, type StatusTarefa } from "./rotulos";
 
 export type Area = { id: number; nome: string; ordem: number; pct: number; objetivos: number; entregues: number };
@@ -248,4 +249,60 @@ export async function salvarObjetivo(id: number | null, d: DadosObjetivo) {
 
 export async function marcarEntregue(id: number, entregue: boolean) {
   await db()`UPDATE objetivos SET entregue_em = ${entregue ? db()`hoje()` : null} WHERE id = ${id}`;
+}
+
+/** Apaga o objetivo e todas as tarefas dele (cascade). */
+export async function excluirObjetivo(id: number) {
+  await db()`DELETE FROM objetivos WHERE id = ${id}`;
+}
+
+// ---------- usuários ----------
+
+export type Papel = "admin" | "diretor";
+export type UsuarioLista = { id: number; nome: string; email: string; papel: Papel; criado_em: string };
+
+export async function listarUsuarios() {
+  return db()<UsuarioLista[]>`SELECT id, nome, email, papel, criado_em::text FROM usuarios ORDER BY papel, nome`;
+}
+
+function papelValido(p: unknown): Papel {
+  if (p !== "admin" && p !== "diretor") throw new ErroValidacao("Perfil inválido");
+  return p;
+}
+
+export async function criarUsuario(d: Record<string, unknown>) {
+  const nome = texto(d.nome, 100);
+  const email = String(d.email ?? "").trim().toLowerCase();
+  const senha = String(d.senha ?? "");
+  const papel = papelValido(d.papel);
+  if (!nome) throw new ErroValidacao("Informe o nome");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ErroValidacao("E-mail inválido");
+  if (senha.length < 8) throw new ErroValidacao("A senha precisa ter 8 caracteres ou mais");
+  const [existe] = await db()`SELECT 1 FROM usuarios WHERE email = ${email}`;
+  if (existe) throw new ErroValidacao("Já existe um usuário com esse e-mail");
+  await db()`INSERT INTO usuarios (nome, email, senha_hash, papel) VALUES (${nome}, ${email}, ${hashSenha(senha)}, ${papel})`;
+}
+
+/** Muda perfil e, se vier preenchida, a senha. Não deixa o sistema sem nenhum admin. */
+export async function atualizarUsuario(id: number, d: Record<string, unknown>) {
+  const papel = papelValido(d.papel);
+  const senha = String(d.senha ?? "");
+  if (senha && senha.length < 8) throw new ErroValidacao("A senha precisa ter 8 caracteres ou mais");
+  const sql = db();
+  await sql.begin(async (tx) => {
+    await tx`UPDATE usuarios SET papel = ${papel} WHERE id = ${id}`;
+    if (senha) await tx`UPDATE usuarios SET senha_hash = ${hashSenha(senha)} WHERE id = ${id}`;
+    const [{ n }] = await tx<{ n: number }[]>`SELECT count(*)::int AS n FROM usuarios WHERE papel = 'admin'`;
+    if (n === 0) throw new ErroValidacao("O sistema precisa de pelo menos um admin");
+  });
+}
+
+export async function excluirUsuario(id: number, quemPede: number) {
+  if (id === quemPede) throw new ErroValidacao("Você não pode excluir o próprio usuário");
+  const sql = db();
+  await sql.begin(async (tx) => {
+    await tx`DELETE FROM usuarios WHERE id = ${id}`;
+    const [{ n }] = await tx<{ n: number }[]>`SELECT count(*)::int AS n FROM usuarios WHERE papel = 'admin'`;
+    if (n === 0) throw new ErroValidacao("O sistema precisa de pelo menos um admin");
+  });
 }

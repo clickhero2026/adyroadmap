@@ -53,7 +53,11 @@ migrations SQL escritas à mão (`npx drizzle-kit generate --custom --name nome`
 4. Em Domains, adicione `roadmap.useady.com.br` (porta 3000) e aponte o DNS (registro A para o IP da VPS, ou CNAME, conforme o seu DNS).
 5. Deploy. Na primeira subida o app aplica as migrations, carrega as 12 áreas e os 39 objetivos e cria o usuário de `ADMIN_EMAIL`.
 
-Mais sócios: no console do serviço, `npm run user:add -- email "Nome" "senha"`.
+Usuários: tela **Usuários** (só admin). Perfis:
+- **Admin**: acesso total (tarefas, objetivos, usuários).
+- **Diretor**: só consulta o roadmap interno e a visão dos diretores, sem editar.
+
+Pelo console do serviço também funciona: `npm run user:add -- email "Nome" "senha" [admin|diretor]`.
 
 ## API (para o Claude e scripts)
 

@@ -1,12 +1,14 @@
 // Visão dos diretores: status por objetivo, sem tarefas. Serve de pauta para a reunião de sexta.
 import Link from "next/link";
 import { listarObjetivos, novidadesDaSemana, type Objetivo } from "@/lib/dados";
+import { exigirUsuario } from "@/lib/auth";
 import { STATUS_OBJETIVO, dataBR, hojeSP } from "@/lib/rotulos";
 
 const ORDEM_STATUS: Record<string, number> = { atrasado: 0, em_risco: 1, em_dia: 2 };
 
 export default async function Diretores() {
-  const [objetivos, novidades] = await Promise.all([listarObjetivos(), novidadesDaSemana()]);
+  const [objetivos, novidades, eu] = await Promise.all([listarObjetivos(), novidadesDaSemana(), exigirUsuario()]);
+  const admin = eu.papel === "admin";
   const mes = hojeSP().slice(0, 7);
   // Em acompanhamento: começou ou tem prazo, e ainda não terminou.
   const ativos = objetivos
@@ -49,7 +51,7 @@ export default async function Diretores() {
 
       <div className="lista">
         {ativos.map((o) => (
-          <LinhaObjetivo key={o.id} o={o} />
+          <LinhaObjetivo key={o.id} o={o} admin={admin} />
         ))}
         {!ativos.length && <div className="item muted">Nenhum objetivo em andamento.</div>}
       </div>
@@ -106,12 +108,12 @@ export default async function Diretores() {
   );
 }
 
-function LinhaObjetivo({ o }: { o: Objetivo }) {
+function LinhaObjetivo({ o, admin }: { o: Objetivo; admin: boolean }) {
   const s = STATUS_OBJETIVO[o.status];
   return (
     <div className="item">
       <div style={{ minWidth: 0 }}>
-        <Link href={`/app/objetivos/${o.id}`}>{o.nome}</Link>
+        {admin ? <Link href={`/app/objetivos/${o.id}`}>{o.nome}</Link> : <span style={{ fontWeight: 500 }}>{o.nome}</span>}
         <div className="small muted">
           {o.area_nome} · {o.prioridade}
           {o.tarefas_novas > 0 && ` · +${o.tarefas_novas} tarefas desde o início`}

@@ -31,6 +31,9 @@ export const statusTarefa = pgEnum("status_tarefa", [
   "cancelada",
 ]);
 
+// admin: acesso total. diretor: só leitura do roadmap interno e da visão dos diretores.
+export const papel = pgEnum("papel", ["admin", "diretor"]);
+
 export const areas = pgTable("areas", {
   id: serial("id").primaryKey(),
   nome: text("nome").notNull().unique(),
@@ -80,5 +83,6 @@ export const usuarios = pgTable("usuarios", {
   nome: text("nome").notNull(),
   email: text("email").notNull().unique(),
   senhaHash: text("senha_hash").notNull(),
+  papel: papel("papel").notNull().default("diretor"),
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
 });

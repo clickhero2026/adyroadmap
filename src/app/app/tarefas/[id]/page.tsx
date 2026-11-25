@@ -1,7 +1,9 @@
+import { exigirAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buscarTarefa, listarObjetivos } from "@/lib/dados";
 import { PESOS, SITUACAO_TAREFA, STATUS_TAREFA, dataBR } from "@/lib/rotulos";
+import { EscolhaObjetivo } from "@/components/EscolhaObjetivo";
 import { acaoExcluirTarefa, acaoSalvarTarefa } from "../../actions";
 
 export default async function EditarTarefa({
@@ -9,17 +11,20 @@ export default async function EditarTarefa({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; voltar?: string }>;
 }) {
+  await exigirAdmin();
   const id = Number((await params).id);
-  const { erro } = await searchParams;
+  const { erro, voltar: v } = await searchParams;
+  // Volta para o quadro (com o filtro que estava) ou para o objetivo de onde veio.
+  const voltar = v && v.startsWith("/app/") ? v : "/app/tarefas";
   const [t, objetivos] = await Promise.all([buscarTarefa(id), listarObjetivos()]);
   if (!t) notFound();
   const sit = SITUACAO_TAREFA[t.situacao];
   return (
     <div className="wrap" style={{ maxWidth: 820 }}>
       <p className="small">
-        <Link href="/app/tarefas">← Tarefas</Link> · <Link href={`/app/objetivos/${t.objetivo_id}`}>{t.objetivo_nome}</Link>
+        <Link href={voltar}>← Tarefas</Link> · <Link href={`/app/objetivos/${t.objetivo_id}`}>{t.objetivo_nome}</Link>
       </p>
       <header className="cabecalho">
         <h1>{t.titulo}</h1>
@@ -32,21 +37,13 @@ export default async function EditarTarefa({
       {erro && <div className="erro">{erro}</div>}
       <form action={acaoSalvarTarefa} className="form">
         <input type="hidden" name="id" value={t.id} />
+        <input type="hidden" name="_voltar" value={voltar} />
         <label>
           Título
           <input name="titulo" defaultValue={t.titulo} required maxLength={300} />
         </label>
         <div className="linha">
-          <label>
-            Objetivo
-            <select name="objetivo_id" defaultValue={t.objetivo_id}>
-              {objetivos.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.area_nome} · {o.nome}
-                </option>
-              ))}
-            </select>
-          </label>
+          <EscolhaObjetivo objetivos={objetivos.filter((o) => o.status !== "cancelado" || o.id === t.objetivo_id)} inicial={t.objetivo_id} />
           <label>
             Status
             <select name="status" defaultValue={t.status}>
@@ -95,6 +92,7 @@ export default async function EditarTarefa({
       </form>
       <form action={acaoExcluirTarefa}>
         <input type="hidden" name="id" value={t.id} />
+        <input type="hidden" name="_voltar" value={voltar} />
         <button type="submit" className="link">
           Excluir tarefa (para tirar da conta sem apagar, use o status Cancelada)
         </button>

@@ -187,3 +187,14 @@ test("% da área pondera pelo peso das tarefas", async () => {
   assert.equal(r.pct, 75);
   assert.equal(r.objetivos, 2);
 });
+
+test("usuário novo nasce diretor; excluir objetivo leva as tarefas junto", async () => {
+  await sql`INSERT INTO usuarios (nome, email, senha_hash) VALUES ('Fulano', 'fulano@teste.com', 'x')`;
+  const [{ papel }] = await sql`SELECT papel FROM usuarios WHERE email = 'fulano@teste.com'`;
+  assert.equal(papel, "diretor");
+  const o = await objetivo();
+  await tarefa(o);
+  await sql`DELETE FROM objetivos WHERE id = ${o}`;
+  const [{ n }] = await sql`SELECT count(*)::int AS n FROM tarefas WHERE objetivo_id = ${o}`;
+  assert.equal(n, 0);
+});

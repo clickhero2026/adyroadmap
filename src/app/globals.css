@@ -179,3 +179,25 @@ footer { color: var(--muted); font-size: 12.5px; }
   .lista .item { grid-template-columns: minmax(0, 1fr) 110px; }
   .lista .item .so-largo { display: none; }
 }
+
+/* Quadro de tarefas: arrastar e soltar */
+.card.arrastavel { cursor: grab; }
+.card.arrastavel:active { cursor: grabbing; }
+.card.arrastando { opacity: .45; }
+.col.alvo { background: color-mix(in srgb, var(--doing) 8%, transparent); outline: 2px dashed color-mix(in srgb, var(--doing) 55%, transparent); outline-offset: 4px; border-radius: 12px; }
+.vazio-col { color: var(--muted); font-size: 13px; text-align: center; padding: 18px 8px; border: 1px dashed var(--line); border-radius: 12px; }
+
+/* Ações que apagam */
+.zona-perigo { margin-top: 32px; border: 1px solid color-mix(in srgb, var(--late) 35%, var(--line)); border-radius: 12px; padding: 12px 16px; }
+.zona-perigo summary { cursor: pointer; color: var(--late); font-weight: 600; }
+.zona-perigo form { display: grid; gap: 12px; margin-top: 12px; justify-items: start; }
+.zona-perigo p { margin: 0; }
+button.perigo { background: var(--late); border-color: var(--late); color: #fff; }
+
+/* Usuários */
+.tabela-usuarios { width: 100%; border-collapse: collapse; }
+.tabela-usuarios th, .tabela-usuarios td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tabela-usuarios th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+.tabela-usuarios form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tabela-usuarios select, .tabela-usuarios input { width: auto; }
+.rolagem { overflow-x: auto; }

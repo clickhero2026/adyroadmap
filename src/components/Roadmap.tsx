@@ -64,14 +64,14 @@ function Selos({ i }: { i: ItemRoadmap }) {
   return selos.length ? <div className="badges">{selos}</div> : null;
 }
 
-function Cartao({ i, interno }: { i: ItemRoadmap; interno: boolean }) {
+function Cartao({ i, interno, editavel }: { i: ItemRoadmap; interno: boolean; editavel: boolean }) {
   return (
     <article className={`card fase-${i.fase}`}>
       <span className="area">
         <IconeArea area={i.area_nome} size={15} />
         {i.area_nome}
       </span>
-      <h4>{interno ? <Link href={`/app/objetivos/${i.id}`}>{i.nome}</Link> : i.nome}</h4>
+      <h4>{editavel ? <Link href={`/app/objetivos/${i.id}`}>{i.nome}</Link> : i.nome}</h4>
       {i.descricao_publica && <p>{i.descricao_publica}</p>}
       {interno && <Selos i={i} />}
       {interno && i.nota_interna && (
@@ -160,7 +160,16 @@ export function Legenda({ interno }: { interno: boolean }) {
   );
 }
 
-export function QuadroPorFase({ itens, interno }: { itens: ItemRoadmap[]; interno: boolean }) {
+export function QuadroPorFase({
+  itens,
+  interno,
+  editavel = interno,
+}: {
+  itens: ItemRoadmap[];
+  interno: boolean;
+  /** Links para editar o objetivo (só admin). */
+  editavel?: boolean;
+}) {
   const fases = FASES[interno ? "interna" : "publica"];
   return (
     <div className="board">
@@ -177,7 +186,7 @@ export function QuadroPorFase({ itens, interno }: { itens: ItemRoadmap[]; intern
               <span className="sub">{f.sub}</span>
             </div>
             {lista.map((i) => (
-              <Cartao key={i.id} i={i} interno={interno} />
+              <Cartao key={i.id} i={i} interno={interno} editavel={editavel} />
             ))}
           </section>
         );
@@ -186,7 +195,16 @@ export function QuadroPorFase({ itens, interno }: { itens: ItemRoadmap[]; intern
   );
 }
 
-export function QuadroPorArea({ itens, interno }: { itens: ItemRoadmap[]; interno: boolean }) {
+export function QuadroPorArea({
+  itens,
+  interno,
+  editavel = interno,
+}: {
+  itens: ItemRoadmap[];
+  interno: boolean;
+  /** Links para editar o objetivo (só admin). */
+  editavel?: boolean;
+}) {
   const fases = FASES[interno ? "interna" : "publica"];
   const nomeFase = Object.fromEntries(fases.map((f) => [f.k, f.nome]));
   return (
@@ -214,7 +232,7 @@ export function QuadroPorArea({ itens, interno }: { itens: ItemRoadmap[]; intern
                   <span className={`dot ${i.fase}`} style={{ marginTop: 7 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 500 }}>
-                      {interno ? <Link href={`/app/objetivos/${i.id}`}>{i.nome}</Link> : i.nome}
+                      {editavel ? <Link href={`/app/objetivos/${i.id}`}>{i.nome}</Link> : i.nome}
                     </div>
                     {i.descricao_publica && <div className="muted small">{i.descricao_publica}</div>}
                   </div>
