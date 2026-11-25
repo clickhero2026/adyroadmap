@@ -42,46 +42,6 @@ function areasDe(itens: ItemRoadmap[]) {
 
 // ---------- pedaços visuais ----------
 
-/** Rosca com a proporção de cada fase; no centro, o % disponível. */
-function Rosca({ itens }: { itens: ItemRoadmap[] }) {
-  const c = contar(itens);
-  const total = itens.length || 1;
-  const r = 52;
-  const circ = 2 * Math.PI * r;
-  let inicio = 0;
-  const pct = Math.round((100 * c.entregue) / total);
-  return (
-    <svg viewBox="0 0 140 140" className="rosca" role="img" aria-label={`${pct}% já disponível`}>
-      <circle cx="70" cy="70" r={r} fill="none" stroke="var(--line)" strokeWidth="16" />
-      {ORDEM_FASES.map((k) => {
-        const len = (c[k] / total) * circ;
-        const el = (
-          <circle
-            key={k}
-            cx="70"
-            cy="70"
-            r={r}
-            fill="none"
-            className={`arco-${k}`}
-            strokeWidth="16"
-            strokeDasharray={`${Math.max(len - 2, 0)} ${circ}`}
-            strokeDashoffset={-inicio}
-            transform="rotate(-90 70 70)"
-          />
-        );
-        inicio += len;
-        return el;
-      })}
-      <text x="70" y="70" textAnchor="middle" className="rosca-n">
-        {pct}%
-      </text>
-      <text x="70" y="90" textAnchor="middle" className="rosca-l">
-        disponível
-      </text>
-    </svg>
-  );
-}
-
 /** Barra segmentada entregue / em andamento / previsto. */
 function BarraFases({ itens, alta = false }: { itens: ItemRoadmap[]; alta?: boolean }) {
   const c = contar(itens);
@@ -131,32 +91,30 @@ export function Resumo({ itens, interno }: { itens: ItemRoadmap[]; interno: bool
   const atrasados = itens.filter((i) => i.status === "atrasado").length;
   const emRisco = itens.filter((i) => i.status === "em_risco").length;
   return (
-    <section className="summary resumo" aria-label="Resumo">
-      <Rosca itens={itens} />
-      <div className="resumo-texto">
-        <h2>
-          {c.entregue} de {itens.length} funcionalidades já estão no ady
-        </h2>
-        <div className="tiles">
-          {fases.map((f) => (
-            <div key={f.k} className={`tile fase-${f.k}`}>
-              <div className="n">{c[f.k as keyof typeof c]}</div>
-              <div className="l">{f.nome}</div>
+    <section className="summary" aria-label="Resumo">
+      <h2>
+        {c.entregue} de {itens.length} funcionalidades já estão no ady
+      </h2>
+      <BarraFases itens={itens} alta />
+      <div className="tiles">
+        {fases.map((f) => (
+          <div key={f.k} className={`tile fase-${f.k}`}>
+            <div className="n">{c[f.k as keyof typeof c]}</div>
+            <div className="l">{f.nome}</div>
+          </div>
+        ))}
+        {interno && (
+          <>
+            <div className="tile late">
+              <div className="n">{atrasados}</div>
+              <div className="l">Atrasados</div>
             </div>
-          ))}
-          {interno && (
-            <>
-              <div className="tile late">
-                <div className="n">{atrasados}</div>
-                <div className="l">Atrasados</div>
-              </div>
-              <div className="tile warn">
-                <div className="n">{emRisco}</div>
-                <div className="l">Em risco</div>
-              </div>
-            </>
-          )}
-        </div>
+            <div className="tile warn">
+              <div className="n">{emRisco}</div>
+              <div className="l">Em risco</div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

@@ -117,16 +117,6 @@ label.check input { width: auto; }
 .tile.fase-em_andamento { border-color: var(--doing); }
 .tile.fase-previsto { border-color: var(--next); }
 
-/* Resumo com rosca */
-.resumo { flex-direction: row; align-items: center; gap: 28px; }
-.resumo-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-.rosca { width: 140px; height: 140px; flex: none; }
-.rosca .arco-entregue { stroke: var(--done); }
-.rosca .arco-em_andamento { stroke: var(--doing); }
-.rosca .arco-previsto { stroke: var(--next); opacity: .55; }
-.rosca-n { font-family: var(--font-display); font-weight: 700; font-size: 28px; fill: var(--ink); }
-.rosca-l { font-size: 12px; fill: var(--muted); }
-
 /* Panorama por área */
 h2.secao { margin: 4px 0 12px; }
 .panorama { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
@@ -184,10 +174,6 @@ html { scroll-behavior: smooth; }
 
 footer { color: var(--muted); font-size: 12.5px; }
 
-@media (max-width: 640px) {
-  .resumo { flex-direction: column; align-items: stretch; }
-  .rosca { align-self: center; }
-}
 @media (max-width: 1000px) {
   .board { grid-template-columns: minmax(0, 1fr); }
   .lista .item { grid-template-columns: minmax(0, 1fr) 110px; }
