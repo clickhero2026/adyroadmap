@@ -1,6 +1,6 @@
 // Visão dos diretores: status por objetivo, sem tarefas. Serve de pauta para a reunião de sexta.
 import Link from "next/link";
-import { buscarSaude, listarObjetivos, novidadesDaSemana, resumoRoadmap, type Objetivo, type Saude } from "@/lib/dados";
+import { buscarSaude, listarObjetivos, listarTarefas, novidadesDaSemana, resumoRoadmap, type Objetivo, type Saude } from "@/lib/dados";
 import { exigirUsuario } from "@/lib/auth";
 import { COR_SAUDE, STATUS_OBJETIVO, dataBR, diasUteisAtras, hojeSP, somarDias } from "@/lib/rotulos";
 import { textoWhatsApp } from "@/lib/resumo";
@@ -10,12 +10,13 @@ const ORDEM_STATUS: Record<string, number> = { atrasado: 0, em_risco: 1, em_dia:
 
 export default async function Diretores() {
   const hoje = hojeSP();
-  const [objetivos, novidades, eu, saude, resumo] = await Promise.all([
+  const [objetivos, novidades, eu, saude, resumo, tarefas] = await Promise.all([
     listarObjetivos(),
     novidadesDaSemana(),
     exigirUsuario(),
     buscarSaude(),
     resumoRoadmap(diasUteisAtras(hoje, 3)),
+    listarTarefas(),
   ]);
   const admin = eu.papel === "admin";
   const mes = hojeSP().slice(0, 7);
@@ -25,8 +26,10 @@ export default async function Diretores() {
     .sort((a, b) => ORDEM_STATUS[a.status] - ORDEM_STATUS[b.status] || (a.prazo ?? "9999").localeCompare(b.prazo ?? "9999"));
   const conta = (s: string) => ativos.filter((o) => o.status === s).length;
   const entreguesMes = objetivos.filter((o) => o.status === "entregue" && (o.entregue_em ?? "").startsWith(mes)).length;
-  const aguardandoValidacao = ativos.filter((o) => o.pct === 100);
-  const semPrazo = ativos.filter((o) => !o.prazo);
+  // Tarefas em andamento (todas têm prazo a partir de "Fazendo"); atrasadas primeiro, depois pelo prazo.
+  const emAndamento = tarefas
+    .filter((t) => ["fazendo", "em_validacao", "bloqueada"].includes(t.status) && t.prazo)
+    .sort((a, b) => Number(b.situacao === "atrasada") - Number(a.situacao === "atrasada") || (a.prazo ?? "").localeCompare(b.prazo ?? ""));
 
   return (
     <div className="wrap">
@@ -46,21 +49,30 @@ export default async function Diretores() {
         {!ativos.length && <div className="item muted">Nenhum objetivo em andamento.</div>}
       </div>
 
-      {(aguardandoValidacao.length > 0 || semPrazo.length > 0) && (
-        <section className="aviso">
-          {aguardandoValidacao.length > 0 && (
-            <div>
-              <b>100% e aguardando validação:</b> {aguardandoValidacao.map((o) => o.nome).join(", ")}.
-            </div>
-          )}
-          {semPrazo.length > 0 && (
-            <div>
-              <b>Em andamento sem prazo</b> (o status só vira &quot;atrasado&quot; com prazo):{" "}
-              {semPrazo.map((o) => o.nome).join(", ")}.
-            </div>
-          )}
-        </section>
-      )}
+      <section className="summary semana">
+        <h2>Em andamento</h2>
+        {!emAndamento.length && (
+          <p className="muted" style={{ margin: 0 }}>
+            Nenhuma tarefa em andamento agora.
+          </p>
+        )}
+        <ul className="checks">
+          {emAndamento.map((t) => (
+            <li key={t.id}>
+              <IconeAndamento status={t.status} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {t.titulo}
+                <div className="small muted">
+                  {t.objetivo_nome} · prazo {dataBR(t.prazo)}
+                </div>
+              </div>
+              <span className={`badge ${t.situacao === "atrasada" ? "late" : ROTULO_ANDAMENTO[t.status].cor}`}>
+                {t.situacao === "atrasada" ? "Atrasada" : ROTULO_ANDAMENTO[t.status].nome}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="summary semana">
         <h2>Na última semana</h2>
@@ -145,6 +157,28 @@ function LinhaObjetivo({ o, admin }: { o: Objetivo; admin: boolean }) {
         <span className={`badge ${s.cor}`}>{s.nome}</span>
       </div>
     </div>
+  );
+}
+
+const ROTULO_ANDAMENTO: Record<string, { nome: string; cor: string }> = {
+  fazendo: { nome: "Fazendo", cor: "ok" },
+  em_validacao: { nome: "Em testes", cor: "mute" },
+  bloqueada: { nome: "Bloqueada", cor: "warn" },
+};
+
+/** Círculo azul com seta (fazendo), roxo-acinzentado com frasco (testes) ou âmbar com pausa (bloqueada). */
+function IconeAndamento({ status }: { status: string }) {
+  return (
+    <svg className={`check-ico andamento-${status}`} width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="10" />
+      {status === "bloqueada" ? (
+        <path d="M8 6.5v7M12 6.5v7" fill="none" strokeWidth="2" strokeLinecap="round" />
+      ) : status === "em_validacao" ? (
+        <path d="M8.3 5.5h3.4M9 5.5v3.6l-3 5a.8.8 0 00.7 1.2h6.6a.8.8 0 00.7-1.2l-3-5V5.5" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M8 6.3l5 3.7-5 3.7z" fill="#fff" strokeWidth="1" strokeLinejoin="round" />
+      )}
+    </svg>
   );
 }
 
