@@ -1,7 +1,7 @@
 // Visão do dev: quadro de tarefas por status, com filtros e criação rápida.
 import { exigirAdmin } from "@/lib/auth";
 import Link from "next/link";
-import { listarObjetivos, listarTarefas, type Tarefa } from "@/lib/dados";
+import { listarAreas, listarObjetivos, listarTarefas, type Tarefa } from "@/lib/dados";
 import { hojeSP, somarDias } from "@/lib/rotulos";
 import { QuadroTarefas } from "@/components/QuadroTarefas";
 import { EscolhaObjetivo } from "@/components/EscolhaObjetivo";
@@ -28,7 +28,7 @@ export default async function Tarefas({
   const sp = await searchParams;
   const filtro: ChaveFiltro = sp.f && sp.f in FILTROS ? (sp.f as ChaveFiltro) : "todas";
   const objetivoId = Number(sp.o) || undefined;
-  const [todas, objetivos] = await Promise.all([listarTarefas({ objetivoId }), listarObjetivos()]);
+  const [todas, objetivos, areas] = await Promise.all([listarTarefas({ objetivoId }), listarObjetivos(), listarAreas()]);
   const hoje = hojeSP();
   const limiteConcluidas = somarDias(hoje, -14);
   const visiveis = todas.filter(
@@ -104,7 +104,7 @@ export default async function Tarefas({
             <input name="titulo" required maxLength={300} placeholder="Verbo + o quê" />
           </label>
           <div className="linha">
-            <EscolhaObjetivo objetivos={objetivosAbertos} inicial={objetivoId} />
+            <EscolhaObjetivo objetivos={objetivosAbertos} inicial={objetivoId} todasAreas={areas} />
             <label>
               Peso
               <select name="peso" defaultValue="2">

@@ -1,7 +1,7 @@
 import { exigirAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buscarTarefa, listarObjetivos } from "@/lib/dados";
+import { buscarTarefa, listarAreas, listarObjetivos } from "@/lib/dados";
 import { PESOS, SITUACAO_TAREFA, STATUS_TAREFA, dataBR } from "@/lib/rotulos";
 import { EscolhaObjetivo } from "@/components/EscolhaObjetivo";
 import { acaoExcluirTarefa, acaoSalvarTarefa } from "../../actions";
@@ -18,7 +18,7 @@ export default async function EditarTarefa({
   const { erro, voltar: v } = await searchParams;
   // Volta para o quadro (com o filtro que estava) ou para o objetivo de onde veio.
   const voltar = v && v.startsWith("/app/") ? v : "/app/tarefas";
-  const [t, objetivos] = await Promise.all([buscarTarefa(id), listarObjetivos()]);
+  const [t, objetivos, areas] = await Promise.all([buscarTarefa(id), listarObjetivos(), listarAreas()]);
   if (!t) notFound();
   const sit = SITUACAO_TAREFA[t.situacao];
   return (
@@ -43,7 +43,7 @@ export default async function EditarTarefa({
           <input name="titulo" defaultValue={t.titulo} required maxLength={300} />
         </label>
         <div className="linha">
-          <EscolhaObjetivo objetivos={objetivos.filter((o) => o.status !== "cancelado" || o.id === t.objetivo_id)} inicial={t.objetivo_id} />
+          <EscolhaObjetivo objetivos={objetivos.filter((o) => o.status !== "cancelado" || o.id === t.objetivo_id)} inicial={t.objetivo_id} todasAreas={areas} />
           <label>
             Status
             <select name="status" defaultValue={t.status}>
