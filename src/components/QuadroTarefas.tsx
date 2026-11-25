@@ -68,13 +68,13 @@ export function QuadroTarefas({ tarefas, colunas, voltar }: { tarefas: Tarefa[];
           </button>
         </div>
       )}
-      <div className="board" style={{ ["--cols" as string]: colunas.length }}>
+      <div className="board quadro" style={{ ["--cols" as string]: colunas.length }}>
         {colunas.map((col) => {
           const doStatus = lista.filter((t) => t.status === col);
           return (
             <section
               key={col}
-              className={`col${alvo === col ? " alvo" : ""}`}
+              className={`col st-${col}${alvo === col ? " alvo" : ""}`}
               aria-label={nomeStatusTarefa[col as Tarefa["status"]]}
               onDragOver={(e) => {
                 if (arrastando === null) return;
@@ -94,7 +94,10 @@ export function QuadroTarefas({ tarefas, colunas, voltar }: { tarefas: Tarefa[];
               }}
             >
               <div className="col-head">
-                <h3>{nomeStatusTarefa[col as Tarefa["status"]]}</h3>
+                <h3>
+                  <span className="ponto" aria-hidden />
+                  {nomeStatusTarefa[col as Tarefa["status"]]}
+                </h3>
                 <span className="count">{doStatus.length}</span>
               </div>
               {doStatus.map((t) => (
@@ -130,9 +133,12 @@ function CartaoTarefa({
   onMudar: (status: string) => void;
 }) {
   const sit = SITUACAO_TAREFA[t.situacao];
+  const concluida = t.status === "concluida";
+  const destaque = concluida ? "concluida" : t.situacao === "atrasada" || t.situacao === "em_risco" ? t.situacao : t.status;
+  const faltam = t.prazo && !concluida ? diasAte(t.prazo) : null;
   return (
     <article
-      className={`card arrastavel${arrastando ? " arrastando" : ""}`}
+      className={`card tarefa sit-${destaque}${arrastando ? " arrastando" : ""}`}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", String(t.id));
@@ -141,23 +147,44 @@ function CartaoTarefa({
       }}
       onDragEnd={() => onArrastar(false)}
     >
-      <span className="area">{t.objetivo_nome}</span>
+      <div className="tarefa-topo">
+        <span className="objetivo" title={t.objetivo_nome}>
+          {t.objetivo_nome}
+        </span>
+        <span className={`peso p${t.peso}`} title={`Peso ${letraPeso[t.peso]}`}>
+          {letraPeso[t.peso]}
+        </span>
+      </div>
       <h4>
         <Link href={href} draggable={false}>
           {t.titulo}
         </Link>
       </h4>
-      <div className="badges">
-        {t.situacao !== "em_dia" && t.situacao !== "concluida" && <span className={`badge ${sit.cor}`}>{sit.nome}</span>}
-        {t.sem_prazo && <span className="badge warn">Sem prazo</span>}
-        <span className="badge mute" title="Peso">
-          {letraPeso[t.peso]}
-        </span>
-        {t.prazo && <span className="small muted">prazo {dataBR(t.prazo)}</span>}
-        {t.status === "concluida" && t.concluida_em && <span className="small muted">concluída {dataBR(t.concluida_em)}</span>}
+      {(t.situacao === "atrasada" || t.situacao === "em_risco" || t.sem_prazo) && !concluida && (
+        <div className="badges">
+          {(t.situacao === "atrasada" || t.situacao === "em_risco") && <span className={`badge forte ${sit.cor}`}>{sit.nome}</span>}
+          {t.sem_prazo && <span className="badge forte warn">Sem prazo</span>}
+        </div>
+      )}
+      <div className="tarefa-meta">
+        {concluida && t.concluida_em ? (
+          <span className="data done">✓ {dataBR(t.concluida_em)}</span>
+        ) : t.prazo ? (
+          <span className={`data ${sit.cor}`}>
+            📅 {dataBR(t.prazo)}
+            {faltam !== null && <b> · {faltam < 0 ? `${-faltam}d atrasada` : faltam === 0 ? "hoje" : faltam === 1 ? "amanhã" : `${faltam} dias`}</b>}
+          </span>
+        ) : (
+          <span />
+        )}
+        {t.responsavel && (
+          <span className="pessoa" title={t.responsavel}>
+            <span className="avatar">{t.responsavel.trim().charAt(0).toUpperCase()}</span>
+            {t.responsavel}
+          </span>
+        )}
       </div>
-      {t.responsavel && <span className="small muted">{t.responsavel}</span>}
-      <select value={t.status} aria-label="Mudar status" onChange={(e) => onMudar(e.currentTarget.value)}>
+      <select className="mudar-status" value={t.status} aria-label="Mudar status" onChange={(e) => onMudar(e.currentTarget.value)}>
         {STATUS_TAREFA.map(([k, nome]) => (
           <option key={k} value={k}>
             {nome}
@@ -166,6 +193,12 @@ function CartaoTarefa({
       </select>
     </article>
   );
+}
+
+/** Dias corridos de hoje (São Paulo) até a data, só para exibição. */
+function diasAte(data: string) {
+  const [a, b] = [hojeSP(), data.slice(0, 10)].map((d) => Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)));
+  return Math.round((b - a) / 86400000);
 }
 
 /** Janela que pede o prazo quando a tarefa sai de "A fazer" sem prazo definido. */

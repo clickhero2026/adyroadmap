@@ -258,3 +258,45 @@ pre.whats { white-space: pre-wrap; font-family: var(--font-body, inherit); font-
 .objetivos-area ul { margin: 8px 0; padding-left: 18px; display: grid; gap: 6px; }
 .objetivos-area .btn { font-size: 13px; padding: 4px 10px; }
 .abas-config { margin-bottom: 16px; }
+
+/* Quadro de tarefas: cada coluna com a cor do status, cartões com faixa da situação */
+.quadro { gap: 12px; }
+.quadro .col { --c: var(--next); background: color-mix(in srgb, var(--c) 7%, #fff); border: 1px solid color-mix(in srgb, var(--c) 22%, transparent); border-top: 4px solid var(--c); border-radius: 14px; padding: 10px; min-height: 220px; }
+.quadro .col.st-a_fazer { --c: #6a7589; }
+.quadro .col.st-fazendo { --c: var(--doing); }
+.quadro .col.st-em_validacao { --c: #7a4fd0; }
+.quadro .col.st-bloqueada { --c: #d4561c; }
+.quadro .col.st-concluida { --c: var(--done); }
+.quadro .col-head { border-bottom: 0; padding: 2px 4px 4px; align-items: center; }
+.quadro .col-head h3 { font-size: 15px; color: color-mix(in srgb, var(--c) 75%, var(--ink)); }
+.quadro .col-head .ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 20%, transparent); }
+.quadro .col-head .count { background: var(--c); color: #fff; font-weight: 700; font-size: 12px; min-width: 24px; text-align: center; padding: 1px 8px; border-radius: 999px; }
+.quadro .col.alvo { outline-color: var(--c); background: color-mix(in srgb, var(--c) 14%, #fff); }
+.quadro .vazio-col { border-color: color-mix(in srgb, var(--c) 35%, transparent); background: rgba(255,255,255,.6); }
+
+.card.tarefa { --s: var(--c, var(--next)); border: 1px solid var(--line); border-left: 5px solid var(--s); border-radius: 10px; padding: 10px 12px 12px; gap: 8px; box-shadow: 0 1px 2px rgba(19,24,32,.06), 0 2px 8px rgba(19,24,32,.05); transition: transform .12s, box-shadow .12s; }
+.card.tarefa:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(19,24,32,.12); }
+.card.tarefa.sit-atrasada { --s: var(--late); background: color-mix(in srgb, var(--late) 4%, #fff); }
+.card.tarefa.sit-em_risco { --s: var(--warn); }
+.card.tarefa.sit-concluida { --s: var(--done); }
+.card.tarefa h4 { font-size: 15px; line-height: 1.35; }
+.card.tarefa h4 a { text-decoration: none; }
+.card.tarefa h4 a:hover { text-decoration: underline; color: var(--doing); }
+.tarefa-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.tarefa-topo .objetivo { font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: color-mix(in srgb, var(--s) 70%, var(--ink)); background: color-mix(in srgb, var(--s) 11%, #fff); padding: 2px 8px; border-radius: 6px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.peso { flex: none; font-size: 11px; font-weight: 700; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: #fff; }
+.peso.p1 { background: #8fa0b8; }
+.peso.p2 { background: #4f74c4; }
+.peso.p3 { background: #2b3f8f; }
+.badge.forte { font-weight: 600; }
+.badge.forte.late { background: var(--late); color: #fff; border-color: var(--late); }
+.badge.forte.warn { background: color-mix(in srgb, var(--warn) 16%, #fff); }
+.tarefa-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12.5px; }
+.tarefa-meta .data { padding: 2px 8px; border-radius: 6px; background: #f2f4f8; color: var(--ink); white-space: nowrap; }
+.tarefa-meta .data b { font-weight: 600; }
+.tarefa-meta .data.late { background: color-mix(in srgb, var(--late) 12%, #fff); color: var(--late); }
+.tarefa-meta .data.warn { background: color-mix(in srgb, var(--warn) 14%, #fff); color: var(--warn); }
+.tarefa-meta .data.done { background: color-mix(in srgb, var(--done) 12%, #fff); color: var(--done); font-weight: 600; }
+.pessoa { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); min-width: 0; }
+.avatar { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; background: var(--s); flex: none; }
+.card.tarefa .mudar-status { font-size: 13px; padding: 4px 8px; border-radius: 8px; background: color-mix(in srgb, var(--c, var(--next)) 6%, #fff); border: 1px solid color-mix(in srgb, var(--c, var(--next)) 25%, var(--line)); }
