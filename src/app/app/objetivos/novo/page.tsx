@@ -3,9 +3,9 @@ import Link from "next/link";
 import { listarAreas } from "@/lib/dados";
 import { FormObjetivo } from "@/components/FormObjetivo";
 
-export default async function NovoObjetivo({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
+export default async function NovoObjetivo({ searchParams }: { searchParams: Promise<{ erro?: string; area?: string }> }) {
   await exigirAdmin();
-  const { erro } = await searchParams;
+  const { erro, area } = await searchParams;
   const areas = await listarAreas();
   return (
     <div className="wrap" style={{ maxWidth: 900 }}>
@@ -14,7 +14,7 @@ export default async function NovoObjetivo({ searchParams }: { searchParams: Pro
       </p>
       <h1>Novo objetivo</h1>
       {erro && <div className="erro">{erro}</div>}
-      <FormObjetivo areas={areas} />
+      <FormObjetivo areas={areas} areaInicial={Number(area) || undefined} />
     </div>
   );
 }

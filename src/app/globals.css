@@ -246,3 +246,7 @@ pre.whats { white-space: pre-wrap; font-family: var(--font-body, inherit); font-
 .check-ico.andamento-em_validacao circle { fill: var(--next); }
 .check-ico.andamento-bloqueada circle { fill: var(--warn); }
 .checks .badge { flex: none; align-self: center; }
+/* Objetivos dentro da tela de áreas */
+.objetivos-area summary { cursor: pointer; color: var(--doing); font-weight: 500; }
+.objetivos-area ul { margin: 8px 0; padding-left: 18px; display: grid; gap: 6px; }
+.objetivos-area .btn { font-size: 13px; padding: 4px 10px; }
