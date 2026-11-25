@@ -32,7 +32,7 @@ export async function encerrarSessao() {
   (await cookies()).delete(COOKIE);
 }
 
-export type Usuario = { id: number; nome: string; email: string };
+export type Usuario = { id: number; nome: string; email: string; papel: "admin" | "diretor" };
 
 export async function usuarioAtual(): Promise<Usuario | null> {
   const bruto = (await cookies()).get(COOKIE)?.value;
@@ -43,7 +43,7 @@ export async function usuarioAtual(): Promise<Usuario | null> {
   const recebido = Buffer.from(sig);
   if (esperado.length !== recebido.length || !timingSafeEqual(esperado, recebido)) return null;
   if (Number(exp) < Date.now() / 1000) return null;
-  const [u] = await db()<Usuario[]>`SELECT id, nome, email FROM usuarios WHERE id = ${Number(id)}`;
+  const [u] = await db()<Usuario[]>`SELECT id, nome, email, papel FROM usuarios WHERE id = ${Number(id)}`;
   return u ?? null;
 }
 
@@ -52,6 +52,16 @@ export async function exigirUsuario(): Promise<Usuario> {
   if (!u) redirect("/entrar");
   return u;
 }
+
+/** Telas e ações de escrita: só admin. Diretor volta para o roadmap interno. */
+export async function exigirAdmin(): Promise<Usuario> {
+  const u = await exigirUsuario();
+  if (u.papel !== "admin") redirect("/app/roadmap");
+  return u;
+}
+
+/** Primeira tela depois do login, conforme o perfil. */
+export const inicioDe = (u: Usuario) => (u.papel === "admin" ? "/app/tarefas" : "/app/roadmap");
 
 /** Token da API (Authorization: Bearer ...), para o Claude e scripts. */
 export function tokenApiValido(req: Request) {

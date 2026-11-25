@@ -1,9 +1,10 @@
+import { exigirAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buscarObjetivo, listarAreas, listarTarefas } from "@/lib/dados";
 import { FASES, SITUACAO_TAREFA, STATUS_OBJETIVO, dataBR, letraPeso, nomeStatusTarefa } from "@/lib/rotulos";
 import { FormObjetivo } from "@/components/FormObjetivo";
-import { acaoCriarTarefa, acaoMarcarEntregue } from "../../actions";
+import { acaoCriarTarefa, acaoExcluirObjetivo, acaoMarcarEntregue } from "../../actions";
 
 export default async function VerObjetivo({
   params,
@@ -12,6 +13,7 @@ export default async function VerObjetivo({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ erro?: string }>;
 }) {
+  const eu = await exigirAdmin();
   const id = Number((await params).id);
   const { erro } = await searchParams;
   const [o, areas, tarefas] = await Promise.all([buscarObjetivo(id), listarAreas(), listarTarefas({ objetivoId: id })]);
@@ -76,7 +78,7 @@ export default async function VerObjetivo({
             return (
               <div key={t.id} className="item" style={{ padding: "8px 0" }}>
                 <div style={{ minWidth: 0 }}>
-                  <Link href={`/app/tarefas/${t.id}`}>{t.titulo}</Link>
+                  <Link href={`/app/tarefas/${t.id}?voltar=${encodeURIComponent(aqui)}`}>{t.titulo}</Link>
                   <div className="small muted">
                     {nomeStatusTarefa[t.status]} · peso {letraPeso[t.peso]}
                     {t.responsavel && ` · ${t.responsavel}`}
@@ -102,12 +104,35 @@ export default async function VerObjetivo({
             <option value="3">G</option>
           </select>
           <input name="prazo" type="date" style={{ width: "auto" }} aria-label="Prazo" />
+          <input name="responsavel" defaultValue={eu.nome.split(" ")[0]} maxLength={100} style={{ width: 130 }} aria-label="Responsável" />
           <button type="submit">Adicionar</button>
         </form>
       </section>
 
       <h2>Dados do objetivo</h2>
       <FormObjetivo o={o} areas={areas} />
+
+      <details className="zona-perigo">
+        <summary>Excluir objetivo</summary>
+        <form action={acaoExcluirObjetivo}>
+          <input type="hidden" name="id" value={o.id} />
+          <p>
+            Isso apaga o objetivo <b>{o.nome}</b>
+            {o.tarefas_total > 0 && (
+              <>
+                {" "}e as <b>{o.tarefas_total} tarefas</b> dele
+              </>
+            )}
+            . Não tem como desfazer. Para só tirar da conta sem apagar, use a marcação <b>Cancelado</b>.
+          </p>
+          <label className="check">
+            <input type="checkbox" name="confirmo" value="sim" required /> Entendi, quero excluir
+          </label>
+          <button type="submit" className="perigo">
+            Excluir de vez
+          </button>
+        </form>
+      </details>
     </div>
   );
 }

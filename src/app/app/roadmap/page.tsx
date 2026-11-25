@@ -1,11 +1,13 @@
 // Roadmap interno: mesmo quadro do público, com status calculado, marcações e notas internas.
 import Link from "next/link";
 import { listarObjetivos } from "@/lib/dados";
+import { exigirUsuario } from "@/lib/auth";
 import { Legenda, Panorama, QuadroPorArea, QuadroPorFase, Resumo } from "@/components/Roadmap";
 
 export default async function RoadmapInterno({ searchParams }: { searchParams: Promise<{ por?: string }> }) {
   const { por } = await searchParams;
   const porArea = por === "area";
+  const admin = (await exigirUsuario()).papel === "admin";
   const itens = (await listarObjetivos()).filter((o) => o.status !== "cancelado");
   return (
     <div className="wrap">
@@ -23,15 +25,17 @@ export default async function RoadmapInterno({ searchParams }: { searchParams: P
               Por área
             </Link>
           </div>
-          <Link className="btn primario" href="/app/objetivos/novo">
-            Novo objetivo
-          </Link>
+          {admin && (
+            <Link className="btn primario" href="/app/objetivos/novo">
+              Novo objetivo
+            </Link>
+          )}
         </div>
       </header>
       <Resumo itens={itens} interno />
       <Panorama itens={itens} interno />
       <Legenda interno />
-      {porArea ? <QuadroPorArea itens={itens} interno /> : <QuadroPorFase itens={itens} interno />}
+      {porArea ? <QuadroPorArea itens={itens} interno editavel={admin} /> : <QuadroPorFase itens={itens} interno editavel={admin} />}
     </div>
   );
 }

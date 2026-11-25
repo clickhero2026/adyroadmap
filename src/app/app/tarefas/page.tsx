@@ -1,9 +1,11 @@
 // Visão do dev: quadro de tarefas por status, com filtros e criação rápida.
+import { exigirAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { listarObjetivos, listarTarefas, type Tarefa } from "@/lib/dados";
-import { SITUACAO_TAREFA, STATUS_TAREFA, dataBR, hojeSP, letraPeso, somarDias } from "@/lib/rotulos";
-import { SelectAutoEnvio } from "@/components/Nav";
-import { acaoCriarTarefa, acaoMudarStatus } from "../actions";
+import { hojeSP, somarDias } from "@/lib/rotulos";
+import { QuadroTarefas } from "@/components/QuadroTarefas";
+import { EscolhaObjetivo } from "@/components/EscolhaObjetivo";
+import { acaoCriarTarefa } from "../actions";
 
 const COLUNAS = ["a_fazer", "fazendo", "em_validacao", "bloqueada", "concluida"] as const;
 
@@ -22,6 +24,7 @@ export default async function Tarefas({
 }: {
   searchParams: Promise<{ f?: string; o?: string; erro?: string }>;
 }) {
+  const eu = await exigirAdmin();
   const sp = await searchParams;
   const filtro: ChaveFiltro = sp.f && sp.f in FILTROS ? (sp.f as ChaveFiltro) : "todas";
   const objetivoId = Number(sp.o) || undefined;
@@ -101,19 +104,7 @@ export default async function Tarefas({
             <input name="titulo" required maxLength={300} placeholder="Verbo + o quê" />
           </label>
           <div className="linha">
-            <label>
-              Objetivo
-              <select name="objetivo_id" required defaultValue={objetivoId ?? ""}>
-                <option value="" disabled>
-                  Escolha…
-                </option>
-                {objetivosAbertos.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.area_nome} · {o.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <EscolhaObjetivo objetivos={objetivosAbertos} inicial={objetivoId} />
             <label>
               Peso
               <select name="peso" defaultValue="2">
@@ -128,7 +119,7 @@ export default async function Tarefas({
             </label>
             <label>
               Responsável
-              <input name="responsavel" placeholder="Rafael, Claude…" maxLength={100} />
+              <input name="responsavel" defaultValue={eu.nome.split(" ")[0]} maxLength={100} />
             </label>
           </div>
           <div className="acoes">
@@ -147,55 +138,7 @@ export default async function Tarefas({
         ))}
       </nav>
 
-      <div className="board" style={{ ["--cols" as string]: COLUNAS.length }}>
-        {COLUNAS.map((col) => {
-          const lista = visiveis.filter((t) => t.status === col);
-          return (
-            <section key={col} className="col">
-              <div className="col-head">
-                <h3>{STATUS_TAREFA.find(([k]) => k === col)![1]}</h3>
-                <span className="count">{lista.length}</span>
-              </div>
-              {lista.map((t) => (
-                <CartaoTarefa key={t.id} t={t} voltar={voltarPara} />
-              ))}
-            </section>
-          );
-        })}
-      </div>
+      <QuadroTarefas tarefas={visiveis} colunas={COLUNAS} voltar={voltarPara} />
     </div>
-  );
-}
-
-function CartaoTarefa({ t, voltar }: { t: Tarefa; voltar: string }) {
-  const sit = SITUACAO_TAREFA[t.situacao];
-  return (
-    <article className="card">
-      <span className="area">{t.objetivo_nome}</span>
-      <h4>
-        <Link href={`/app/tarefas/${t.id}`}>{t.titulo}</Link>
-      </h4>
-      <div className="badges">
-        {t.situacao !== "em_dia" && t.situacao !== "concluida" && <span className={`badge ${sit.cor}`}>{sit.nome}</span>}
-        {t.sem_prazo && <span className="badge warn">Sem prazo</span>}
-        <span className="badge mute" title="Peso">
-          {letraPeso[t.peso]}
-        </span>
-        {t.prazo && <span className="small muted">prazo {dataBR(t.prazo)}</span>}
-        {t.status === "concluida" && t.concluida_em && <span className="small muted">concluída {dataBR(t.concluida_em)}</span>}
-      </div>
-      {t.responsavel && <span className="small muted">{t.responsavel}</span>}
-      <form action={acaoMudarStatus}>
-        <input type="hidden" name="id" value={t.id} />
-        <input type="hidden" name="_voltar" value={voltar} />
-        <SelectAutoEnvio name="status" defaultValue={t.status} aria-label="Mudar status">
-          {STATUS_TAREFA.map(([k, nome]) => (
-            <option key={k} value={k}>
-              {nome}
-            </option>
-          ))}
-        </SelectAutoEnvio>
-      </form>
-    </article>
   );
 }

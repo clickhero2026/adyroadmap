@@ -1,8 +1,10 @@
+import { exigirAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { listarAreas } from "@/lib/dados";
 import { FormObjetivo } from "@/components/FormObjetivo";
 
 export default async function NovoObjetivo({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
+  await exigirAdmin();
   const { erro } = await searchParams;
   const areas = await listarAreas();
   return (

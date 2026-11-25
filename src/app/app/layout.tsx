@@ -10,9 +10,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="topbar">
         <div className="inner">
           <span className="marca">ady · roadmap</span>
-          <Nav />
+          <Nav admin={u.papel === "admin"} />
           <div className="usuario">
             {u.nome}
+            {u.papel === "diretor" && <span className="badge mute">Diretor</span>}
             <form action="/sair" method="post">
               <button className="link" type="submit">
                 Sair
