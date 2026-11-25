@@ -17,7 +17,7 @@ export function textoWhatsApp(r: Resumo, hoje: string, link?: string) {
   const cor = COR_SAUDE[s.cor];
   const partes: string[] = [];
 
-  partes.push(`🗺️ *Roadmap ady* · ${dataBR(hoje).slice(0, 5)}`);
+  partes.push(`🗺️ *ÚLTIMAS ATUALIZAÇÕES DO ROADMAP ady* · ${dataBR(hoje).slice(0, 5)}`);
   partes.push(
     `${cor.emoji} *${cor.frase}* · ${s.pct}% feito (${s.tarefas_concluidas} de ${s.tarefas} tarefas)`,
   );
