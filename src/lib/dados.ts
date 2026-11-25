@@ -343,3 +343,58 @@ export async function excluirArea(id: number) {
   if (n > 0) throw new ErroValidacao(`A área ainda tem ${n} objetivo(s). Mova ou exclua os objetivos antes.`);
   await db()`DELETE FROM areas WHERE id = ${id}`;
 }
+
+// ---------- saúde e resumo ----------
+
+export type Saude = {
+  objetivos: number;
+  em_dia: number;
+  em_risco: number;
+  atrasados: number;
+  atrasados_p1: number;
+  tarefas: number;
+  tarefas_concluidas: number;
+  tarefas_atrasadas: number;
+  pct: number;
+  pct_esperado: number | null;
+  pct_real_com_prazo: number | null;
+  cor: "verde" | "amarelo" | "vermelho";
+};
+
+export async function buscarSaude() {
+  const [s] = await db()<Saude[]>`SELECT * FROM v_saude`;
+  return s;
+}
+
+export type ItemResumo = { titulo: string; objetivo_nome: string; data?: string | null };
+
+/** Dados do resumo: o que está sendo feito, em testes e o que terminou desde `desde`. */
+export async function resumoRoadmap(desde: string) {
+  const sql = db();
+  const [saude, fazendo, validacao, concluidas, entregues, atrasados] = await Promise.all([
+    buscarSaude(),
+    sql<{ objetivo_nome: string; pct: number; tarefas: number }[]>`
+      SELECT o.nome AS objetivo_nome, o.pct, count(*)::integer AS tarefas
+      FROM tarefas t JOIN v_objetivos o ON o.id = t.objetivo_id
+      WHERE t.status = 'fazendo'
+      GROUP BY o.id, o.nome, o.pct, o.prioridade
+      ORDER BY o.prioridade, o.nome`,
+    sql<ItemResumo[]>`
+      SELECT t.titulo, o.nome AS objetivo_nome
+      FROM tarefas t JOIN objetivos o ON o.id = t.objetivo_id
+      WHERE t.status = 'em_validacao'
+      ORDER BY o.nome, t.titulo`,
+    sql<ItemResumo[]>`
+      SELECT t.titulo, o.nome AS objetivo_nome, t.concluida_em AS data
+      FROM tarefas t JOIN objetivos o ON o.id = t.objetivo_id
+      WHERE t.status = 'concluida' AND t.concluida_em > ${desde}::date
+      ORDER BY t.concluida_em DESC, o.nome`,
+    sql<{ nome: string; entregue_em: string }[]>`
+      SELECT nome, entregue_em FROM v_objetivos
+      WHERE status = 'entregue' AND entregue_em > ${desde}::date
+      ORDER BY entregue_em DESC`,
+    sql<{ nome: string }[]>`SELECT nome FROM v_objetivos WHERE status = 'atrasado' ORDER BY prioridade, nome`,
+  ]);
+  return { desde, saude, fazendo, validacao, concluidas, entregues, atrasados };
+}
+export type Resumo = Awaited<ReturnType<typeof resumoRoadmap>>;

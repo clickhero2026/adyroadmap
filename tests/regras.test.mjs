@@ -198,3 +198,34 @@ test("usuário novo nasce diretor; excluir objetivo leva as tarefas junto", asyn
   const [{ n }] = await sql`SELECT count(*)::int AS n FROM tarefas WHERE objetivo_id = ${o}`;
   assert.equal(n, 0);
 });
+
+test("saúde do roadmap: cor e totais", async () => {
+  // Isola: tudo que já existe vira cancelado para a conta começar do zero.
+  await sql`UPDATE objetivos SET marcacao = 'cancelado'`;
+  let [s] = await sql`SELECT * FROM v_saude`;
+  assert.equal(s.objetivos, 0);
+  assert.equal(s.cor, "verde");
+  // 4 objetivos em andamento e em dia
+  for (let i = 0; i < 4; i++) {
+    const o = await objetivo({ prazo: "2026-12-31" });
+    await tarefa(o, { status: "concluida", peso: 1 });
+    await tarefa(o, { status: "fazendo", peso: 1, prazo: "2026-12-20" });
+  }
+  [s] = await sql`SELECT * FROM v_saude`;
+  assert.equal(s.cor, "verde");
+  assert.equal(s.tarefas, 8);
+  assert.equal(s.tarefas_concluidas, 4);
+  assert.equal(s.pct, 50);
+  // 1 em risco de 5 (20%) -> amarelo
+  const r = await objetivo({ prazo: "2026-12-31", prioridade: "P2" });
+  await tarefa(r, { status: "bloqueada", prazo: "2026-12-20" });
+  [s] = await sql`SELECT * FROM v_saude`;
+  assert.equal(s.em_risco, 1);
+  assert.equal(s.cor, "amarelo");
+  // P1 atrasado -> vermelho
+  const a = await objetivo({ prazo: "2026-11-01", prioridade: "P1" });
+  await tarefa(a, { status: "fazendo", prazo: "2026-11-01" });
+  [s] = await sql`SELECT * FROM v_saude`;
+  assert.equal(s.atrasados_p1, 1);
+  assert.equal(s.cor, "vermelho");
+});

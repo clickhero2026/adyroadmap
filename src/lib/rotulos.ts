@@ -78,3 +78,21 @@ export function somarDias(d: string, n: number) {
   x.setUTCDate(x.getUTCDate() + n);
   return x.toISOString().slice(0, 10);
 }
+
+/** Data de n dias úteis antes (seg a sex), em AAAA-MM-DD. */
+export function diasUteisAtras(d: string, n: number) {
+  let atual = d;
+  let faltam = n;
+  while (faltam > 0) {
+    atual = somarDias(atual, -1);
+    const dia = new Date(`${atual}T12:00:00Z`).getUTCDay();
+    if (dia !== 0 && dia !== 6) faltam--;
+  }
+  return atual;
+}
+
+export const COR_SAUDE: Record<string, { nome: string; emoji: string; frase: string }> = {
+  verde: { nome: "Saudável", emoji: "🟢", frase: "Roadmap em dia" },
+  amarelo: { nome: "Atenção", emoji: "🟡", frase: "Roadmap pede atenção" },
+  vermelho: { nome: "Crítico", emoji: "🔴", frase: "Roadmap com atrasos importantes" },
+};
