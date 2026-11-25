@@ -257,3 +257,4 @@ pre.whats { white-space: pre-wrap; font-family: var(--font-body, inherit); font-
 .objetivos-area summary { cursor: pointer; color: var(--doing); font-weight: 500; }
 .objetivos-area ul { margin: 8px 0; padding-left: 18px; display: grid; gap: 6px; }
 .objetivos-area .btn { font-size: 13px; padding: 4px 10px; }
+.abas-config { margin-bottom: 16px; }

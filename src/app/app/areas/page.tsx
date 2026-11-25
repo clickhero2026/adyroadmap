@@ -1,5 +1,6 @@
 // Áreas do roadmap (só admin): criar, renomear, mudar ordem e ícone, excluir área vazia.
 // Objetivos de cada área aparecem aqui, com links para editar e para criar um novo já na área.
+import { AbasConfiguracoes } from "@/components/Nav";
 import Link from "next/link";
 import { exigirAdmin } from "@/lib/auth";
 import { listarAreas, listarObjetivos } from "@/lib/dados";
@@ -25,6 +26,7 @@ export default async function Areas({ searchParams }: { searchParams: Promise<{ 
 
   return (
     <div className="wrap" style={{ maxWidth: 1000 }}>
+      <AbasConfiguracoes />
       <header className="cabecalho">
         <div>
           <h1>Áreas e objetivos</h1>
