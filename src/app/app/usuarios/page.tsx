@@ -1,4 +1,5 @@
 // Gestão de usuários (só admin). Diretor vê apenas o roadmap interno e a visão dos diretores.
+import { AbasConfiguracoes } from "@/components/Nav";
 import { exigirAdmin } from "@/lib/auth";
 import { listarUsuarios } from "@/lib/dados";
 import { acaoAtualizarUsuario, acaoCriarUsuario, acaoExcluirUsuario } from "../actions";
@@ -14,6 +15,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
   const usuarios = await listarUsuarios();
   return (
     <div className="wrap" style={{ maxWidth: 1000 }}>
+      <AbasConfiguracoes />
       <header className="cabecalho">
         <div>
           <h1>Usuários</h1>

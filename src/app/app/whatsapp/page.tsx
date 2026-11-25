@@ -1,4 +1,5 @@
 // Conexão do WhatsApp e resumo automático para o grupo dos diretores (só admin).
+import { AbasConfiguracoes } from "@/components/Nav";
 import { exigirAdmin } from "@/lib/auth";
 import { resumoRoadmap } from "@/lib/dados";
 import { textoWhatsApp } from "@/lib/resumo";
@@ -32,6 +33,7 @@ export default async function WhatsApp({ searchParams }: { searchParams: Promise
   return (
     <div className="wrap" style={{ maxWidth: 1000 }}>
       {e.status === "aguardando_qr" && <AtualizarSozinho />}
+      <AbasConfiguracoes />
       <header className="cabecalho">
         <div>
           <h1>WhatsApp</h1>
