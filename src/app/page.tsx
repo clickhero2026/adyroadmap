@@ -1,7 +1,8 @@
-// Roadmap público (vitrine de roadmap.useady.com.br). Sem login, sem atrasos, sem notas internas.
+// Roadmap público (vitrine de roadmap.useady.com.br). Sem login, sem atrasos, sem notas internas
+// e sem itens marcados como só internos (onboarding, planos, pagamentos etc.).
 import Link from "next/link";
 import { listarObjetivosPublicos } from "@/lib/dados";
-import { QuadroPorArea, QuadroPorFase, Resumo } from "@/components/Roadmap";
+import { Legenda, Panorama, QuadroPorArea, QuadroPorFase, Resumo } from "@/components/Roadmap";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,11 @@ export default async function RoadmapPublico({
           <h1>Roadmap do ady</h1>
           <p>Tudo o que o ady já faz e o que vem por aí.</p>
         </div>
+      </header>
+      <Resumo itens={itens} interno={false} />
+      <Panorama itens={itens} interno={false} />
+      <div className="cabecalho">
+        <Legenda interno={false} />
         <div className="filtros" aria-label="Organização">
           <Link href="/" aria-current={!porArea}>
             Por situação
@@ -28,8 +34,7 @@ export default async function RoadmapPublico({
             Por área
           </Link>
         </div>
-      </header>
-      <Resumo itens={itens} interno={false} />
+      </div>
       {porArea ? <QuadroPorArea itens={itens} interno={false} /> : <QuadroPorFase itens={itens} interno={false} />}
       <footer>
         Este roadmap mostra a direção do produto e pode mudar. Datas e ordem dependem do andamento do

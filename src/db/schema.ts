@@ -52,7 +52,8 @@ export const objetivos = pgTable("objetivos", {
   iniciadoEm: date("iniciado_em"),
   entregueEm: date("entregue_em"),
   descricaoPublica: text("descricao_publica"),
-  publico: boolean("publico").notNull().default(true),
+  // Novo objetivo nasce fora do roadmap público; aparecer lá é uma decisão explícita.
+  publico: boolean("publico").notNull().default(false),
   marcacao: marcacao("marcacao"),
   notaInterna: text("nota_interna"),
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),

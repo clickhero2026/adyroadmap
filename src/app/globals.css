@@ -1,4 +1,4 @@
-/* Mesmo visual do painel de roadmap de 23/11/2026: cores semânticas por fase, sem cor de marca fixa. */
+/* Tema claro sempre (pedido do Rafael em 24/11/2026), também quando o sistema está no modo escuro. */
 :root {
   --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
   --font-body: "DM Sans", "Segoe UI", system-ui, sans-serif;
@@ -14,22 +14,6 @@
   --warn: #a96a0c;
   --ok: #2a62c8;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1116;
-    --surface: #161b23;
-    --ink: #e8ecf2;
-    --muted: #9ba5b4;
-    --line: #272f3b;
-    --done: #3fc68b;
-    --doing: #6c9cf2;
-    --next: #8e99ad;
-    --late: #f27573;
-    --warn: #e6ad45;
-    --ok: #6c9cf2;
-    color-scheme: dark;
-  }
 }
 
 * { box-sizing: border-box; }
@@ -91,7 +75,10 @@ label.check input { width: auto; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .card h4 { margin: 0; font-size: 15px; font-weight: 600; }
 .card p { margin: 0; color: var(--muted); font-size: 13.5px; }
-.card .area { font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.card .area { font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.card.fase-entregue { border-left: 4px solid var(--done); }
+.card.fase-em_andamento { border-left: 4px solid var(--doing); }
+.card.fase-previsto { border-left: 4px solid var(--next); }
 .badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .badge { font-size: 12px; font-weight: 500; padding: 1px 9px; border-radius: 999px; border: 1px solid currentColor; line-height: 1.6; white-space: nowrap; }
 .badge.late { color: var(--late); background: color-mix(in srgb, var(--late) 10%, transparent); }
@@ -111,6 +98,7 @@ label.check input { width: auto; }
 
 .bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; background: var(--line); }
 .bar span { display: block; min-width: 4px; }
+.bar.fina { height: 8px; border-radius: 4px; }
 .b-entregue { background: var(--done); }
 .b-em_andamento { background: var(--doing); }
 .b-previsto { background: var(--next); opacity: .55; }
@@ -125,6 +113,31 @@ label.check input { width: auto; }
 .tile.late { border-color: var(--late); }
 .tile.warn { border-color: var(--warn); }
 .tile.mute { border-color: var(--next); }
+.tile.fase-entregue { border-color: var(--done); }
+.tile.fase-em_andamento { border-color: var(--doing); }
+.tile.fase-previsto { border-color: var(--next); }
+
+/* Panorama por área */
+h2.secao { margin: 4px 0 12px; }
+.panorama { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.area-tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; text-decoration: none; align-items: center; transition: border-color .15s, transform .15s; }
+.area-tile:hover { border-color: var(--doing); transform: translateY(-1px); }
+.area-tile .area-icone { grid-row: span 2; }
+.area-tile .area-nome { font-weight: 600; font-size: 14.5px; line-height: 1.3; }
+.area-tile .area-conta { font-size: 13px; color: var(--muted); }
+.area-tile .area-conta b { color: var(--done); font-size: 15px; }
+.area-tile .bar { grid-column: 1 / -1; margin-top: 8px; }
+.area-icone { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--doing) 10%, transparent); color: var(--doing); flex: none; }
+.area-card-head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.area-card > .bar { margin-bottom: 6px; }
+.pill { font-size: 12px; font-weight: 500; padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.fase-entregue { color: var(--done); background: color-mix(in srgb, var(--done) 12%, transparent); }
+.pill.fase-em_andamento { color: var(--doing); background: color-mix(in srgb, var(--doing) 12%, transparent); }
+.pill.fase-previsto { color: var(--next); background: color-mix(in srgb, var(--next) 12%, transparent); }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.legenda > span { display: inline-flex; align-items: center; gap: 6px; }
+html { scroll-behavior: smooth; }
+.area-card { scroll-margin-top: 16px; }
 
 /* Quadro em colunas */
 .board { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 14px; align-items: start; }
