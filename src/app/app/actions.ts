@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirAdmin } from "@/lib/auth";
+import { comandoWhatsApp, salvarConfigWhatsApp } from "@/lib/whatsapp";
 import {
   ErroValidacao,
   atualizarTarefa,
@@ -144,4 +145,36 @@ export async function acaoAtualizarArea(form: FormData) {
 export async function acaoExcluirArea(form: FormData) {
   const id = Number(form.get("id"));
   await tentar("/app/areas", () => excluirArea(id));
+}
+
+// ---------- WhatsApp ----------
+
+async function comandoTela(caminho: "/conectar" | "/desconectar" | "/grupos" | "/enviar", ok: string) {
+  await exigirAdmin();
+  const erro = await comandoWhatsApp(caminho);
+  revalidatePath("/app/whatsapp");
+  redirect(erro ? `/app/whatsapp?erro=${encodeURIComponent(erro)}` : `/app/whatsapp?ok=${encodeURIComponent(ok)}`);
+}
+
+export async function acaoWhatsAppConectar() {
+  await comandoTela("/conectar", "Gerando o QR code…");
+}
+export async function acaoWhatsAppDesconectar() {
+  await comandoTela("/desconectar", "WhatsApp desconectado");
+}
+export async function acaoWhatsAppGrupos() {
+  await comandoTela("/grupos", "Lista de grupos atualizada");
+}
+export async function acaoWhatsAppEnviar() {
+  await comandoTela("/enviar", "Resumo enviado para o grupo");
+}
+export async function acaoWhatsAppSalvar(form: FormData) {
+  await exigirAdmin();
+  await salvarConfigWhatsApp({
+    grupo_id: String(form.get("grupo_id") ?? ""),
+    ativo: form.get("ativo") === "on",
+    hora: Number(form.get("hora") ?? 9),
+  });
+  revalidatePath("/app/whatsapp");
+  redirect("/app/whatsapp?ok=" + encodeURIComponent("Configuração salva"));
 }

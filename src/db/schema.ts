@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   serial,
@@ -87,4 +88,37 @@ export const usuarios = pgTable("usuarios", {
   senhaHash: text("senha_hash").notNull(),
   papel: papel("papel").notNull().default("diretor"),
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------- WhatsApp (resumo para o grupo dos diretores) ----------
+
+// Sessão do Baileys (credenciais e chaves), guardada no banco para não depender de volume no Easypanel.
+export const whatsappAuth = pgTable("whatsapp_auth", {
+  chave: text("chave").primaryKey(),
+  valor: text("valor").notNull(),
+});
+
+// Linha única (id = 1): estado da conexão, escrito pelo worker, e configuração, escrita pela tela.
+export const whatsapp = pgTable("whatsapp", {
+  id: integer("id").primaryKey().default(1),
+  status: text("status").notNull().default("desconectado"), // desconectado | aguardando_qr | conectado
+  qr: text("qr"), // data URL da imagem do QR enquanto aguarda leitura
+  numero: text("numero"),
+  erro: text("erro"), // último problema de conexão, para mostrar na tela
+  grupos: jsonb("grupos").$type<{ id: string; nome: string }[]>().notNull().default([]),
+  grupoId: text("grupo_id"),
+  grupoNome: text("grupo_nome"),
+  ativo: boolean("ativo").notNull().default(false), // envio automático ligado
+  hora: integer("hora").notNull().default(9),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const whatsappEnvios = pgTable("whatsapp_envios", {
+  id: serial("id").primaryKey(),
+  enviadoEm: timestamp("enviado_em", { withTimezone: true }).notNull().defaultNow(),
+  desde: date("desde").notNull(),
+  texto: text("texto").notNull(),
+  ok: boolean("ok").notNull(),
+  erro: text("erro"),
+  manual: boolean("manual").notNull().default(false),
 });

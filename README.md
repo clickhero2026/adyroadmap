@@ -59,6 +59,16 @@ Usuários: tela **Usuários** (só admin). Perfis:
 
 Pelo console do serviço também funciona: `npm run user:add -- email "Nome" "senha" [admin|diretor]`.
 
+## WhatsApp (resumo para os diretores)
+
+O container roda, junto com o site, um worker (`scripts/whatsapp.mjs`, Baileys) que:
+- conecta o WhatsApp pelo QR code da tela **WhatsApp** (só admin), como um aparelho conectado;
+- guarda a sessão no banco (tabela `whatsapp_auth`), então não precisa de volume no Easypanel;
+- a cada 3 dias úteis, a partir da hora escolhida, manda no grupo escolhido o resumo: concluído desde o último envio, em andamento, em testes e atrasados.
+
+Variáveis opcionais: `APP_URL` (link no fim da mensagem, padrão `https://roadmap.useady.com.br`), `WA_PORT` (porta interna, padrão 3100), `WHATSAPP_DESLIGADO=1` (não sobe o worker).
+O Baileys não é oficial: o WhatsApp pode bloquear o número que o usa.
+
 ## API (para o Claude e scripts)
 
 Todas pedem `Authorization: Bearer $API_TOKEN`.

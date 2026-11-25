@@ -36,6 +36,20 @@
       "when": 1795618127678,
       "tag": "0004_icone_area",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795620597054,
+      "tag": "0005_saude_roadmap",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795621307452,
+      "tag": "0006_whatsapp",
+      "breakpoints": true
     }
   ]
 }

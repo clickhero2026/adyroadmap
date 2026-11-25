@@ -44,4 +44,28 @@ if (n === 0 && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
 const port = process.env.PORT || "3000";
 const child = spawn("node_modules/.bin/next", ["start", "-p", port, "-H", "0.0.0.0"], { stdio: "inherit" });
 child.on("exit", (code) => process.exit(code ?? 0));
-for (const sig of ["SIGTERM", "SIGINT"]) process.on(sig, () => child.kill(sig));
+
+// Worker do WhatsApp (resumo para os diretores). Se cair, volta sozinho; nunca derruba o site.
+// WHATSAPP_DESLIGADO=1 desativa.
+let worker = null;
+let encerrando = false;
+function iniciarWorker() {
+  if (process.env.WHATSAPP_DESLIGADO === "1" || encerrando) return;
+  worker = spawn(process.execPath, ["scripts/whatsapp.mjs"], { stdio: "inherit" });
+  worker.on("exit", (code) => {
+    worker = null;
+    if (!encerrando) {
+      console.log(`[whatsapp] worker saiu (código ${code}); reiniciando em 15 s`);
+      setTimeout(iniciarWorker, 15000);
+    }
+  });
+}
+iniciarWorker();
+
+for (const sig of ["SIGTERM", "SIGINT"]) {
+  process.on(sig, () => {
+    encerrando = true;
+    worker?.kill(sig);
+    child.kill(sig);
+  });
+}

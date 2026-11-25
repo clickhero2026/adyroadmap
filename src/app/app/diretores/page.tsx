@@ -1,13 +1,23 @@
 // Visão dos diretores: status por objetivo, sem tarefas. Serve de pauta para a reunião de sexta.
 import Link from "next/link";
-import { listarObjetivos, novidadesDaSemana, type Objetivo } from "@/lib/dados";
+import { buscarSaude, listarObjetivos, listarTarefas, novidadesDaSemana, resumoRoadmap, type Objetivo, type Saude } from "@/lib/dados";
 import { exigirUsuario } from "@/lib/auth";
-import { STATUS_OBJETIVO, dataBR, hojeSP } from "@/lib/rotulos";
+import { COR_SAUDE, STATUS_OBJETIVO, dataBR, diasUteisAtras, hojeSP, somarDias } from "@/lib/rotulos";
+import { textoWhatsApp } from "@/lib/resumo";
+import { BotaoCopiar } from "@/components/BotaoCopiar";
 
 const ORDEM_STATUS: Record<string, number> = { atrasado: 0, em_risco: 1, em_dia: 2 };
 
 export default async function Diretores() {
-  const [objetivos, novidades, eu] = await Promise.all([listarObjetivos(), novidadesDaSemana(), exigirUsuario()]);
+  const hoje = hojeSP();
+  const [objetivos, novidades, eu, saude, resumo, tarefas] = await Promise.all([
+    listarObjetivos(),
+    novidadesDaSemana(),
+    exigirUsuario(),
+    buscarSaude(),
+    resumoRoadmap(diasUteisAtras(hoje, 3)),
+    listarTarefas(),
+  ]);
   const admin = eu.papel === "admin";
   const mes = hojeSP().slice(0, 7);
   // Em acompanhamento: começou ou tem prazo, e ainda não terminou.
@@ -16,8 +26,10 @@ export default async function Diretores() {
     .sort((a, b) => ORDEM_STATUS[a.status] - ORDEM_STATUS[b.status] || (a.prazo ?? "9999").localeCompare(b.prazo ?? "9999"));
   const conta = (s: string) => ativos.filter((o) => o.status === s).length;
   const entreguesMes = objetivos.filter((o) => o.status === "entregue" && (o.entregue_em ?? "").startsWith(mes)).length;
-  const aguardandoValidacao = ativos.filter((o) => o.pct === 100);
-  const semPrazo = ativos.filter((o) => !o.prazo);
+  // Tarefas em andamento (todas têm prazo a partir de "Fazendo"); atrasadas primeiro, depois pelo prazo.
+  const emAndamento = tarefas
+    .filter((t) => ["fazendo", "em_validacao", "bloqueada"].includes(t.status) && t.prazo)
+    .sort((a, b) => Number(b.situacao === "atrasada") - Number(a.situacao === "atrasada") || (a.prazo ?? "").localeCompare(b.prazo ?? ""));
 
   return (
     <div className="wrap">
@@ -28,26 +40,7 @@ export default async function Diretores() {
         </div>
       </header>
 
-      <section className="summary">
-        <div className="tiles">
-          <div className="tile ok">
-            <div className="n">{conta("em_dia")}</div>
-            <div className="l">Em dia</div>
-          </div>
-          <div className="tile warn">
-            <div className="n">{conta("em_risco")}</div>
-            <div className="l">Em risco</div>
-          </div>
-          <div className="tile late">
-            <div className="n">{conta("atrasado")}</div>
-            <div className="l">Atrasados</div>
-          </div>
-          <div className="tile done">
-            <div className="n">{entreguesMes}</div>
-            <div className="l">Entregues no mês</div>
-          </div>
-        </div>
-      </section>
+      <PainelSaude s={saude} entreguesMes={entreguesMes} />
 
       <div className="lista">
         {ativos.map((o) => (
@@ -56,23 +49,32 @@ export default async function Diretores() {
         {!ativos.length && <div className="item muted">Nenhum objetivo em andamento.</div>}
       </div>
 
-      {(aguardandoValidacao.length > 0 || semPrazo.length > 0) && (
-        <section className="aviso">
-          {aguardandoValidacao.length > 0 && (
-            <div>
-              <b>100% e aguardando validação:</b> {aguardandoValidacao.map((o) => o.nome).join(", ")}.
-            </div>
-          )}
-          {semPrazo.length > 0 && (
-            <div>
-              <b>Em andamento sem prazo</b> (o status só vira &quot;atrasado&quot; com prazo):{" "}
-              {semPrazo.map((o) => o.nome).join(", ")}.
-            </div>
-          )}
-        </section>
-      )}
+      <section className="summary semana">
+        <h2>Em andamento</h2>
+        {!emAndamento.length && (
+          <p className="muted" style={{ margin: 0 }}>
+            Nenhuma tarefa em andamento agora.
+          </p>
+        )}
+        <ul className="checks">
+          {emAndamento.map((t) => (
+            <li key={t.id}>
+              <IconeAndamento status={t.status} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {t.titulo}
+                <div className="small muted">
+                  {t.objetivo_nome} · prazo {dataBR(t.prazo)}
+                </div>
+              </div>
+              <span className={`badge ${t.situacao === "atrasada" ? "late" : ROTULO_ANDAMENTO[t.status].cor}`}>
+                {t.situacao === "atrasada" ? "Atrasada" : ROTULO_ANDAMENTO[t.status].nome}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      <section className="summary">
+      <section className="summary semana">
         <h2>Na última semana</h2>
         {novidades.objetivos.length === 0 && novidades.tarefas.length === 0 && (
           <p className="muted" style={{ margin: 0 }}>
@@ -80,30 +82,52 @@ export default async function Diretores() {
           </p>
         )}
         {novidades.objetivos.length > 0 && (
-          <div>
-            <b>Entregues:</b>
-            <ul>
-              {novidades.objetivos.map((o) => (
-                <li key={o.nome}>
-                  {o.nome} <span className="muted small">({dataBR(o.entregue_em)})</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="checks entregas">
+            {novidades.objetivos.map((o) => (
+              <li key={o.nome}>
+                <Check />
+                <div>
+                  <b>{o.nome}</b> <span className="selo-entregue">Entregue</span>
+                  <div className="small muted">{dataBR(o.entregue_em)}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
         {novidades.tarefas.length > 0 && (
-          <div>
-            <b>Tarefas concluídas:</b>
-            <ul>
+          <>
+            <h3 className="small muted" style={{ margin: "14px 0 6px" }}>
+              {novidades.tarefas.length} {novidades.tarefas.length === 1 ? "tarefa concluída" : "tarefas concluídas"}
+            </h3>
+            <ul className="checks">
               {novidades.tarefas.map((t, i) => (
                 <li key={i}>
-                  {t.titulo} <span className="muted small">· {t.objetivo_nome} · {dataBR(t.concluida_em)}</span>
+                  <Check />
+                  <div>
+                    {t.titulo}
+                    <div className="small muted">
+                      {t.objetivo_nome} · {dataBR(t.concluida_em)}
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
-          </div>
+          </>
         )}
       </section>
+
+      {admin && (
+        <section className="summary">
+          <div className="cabecalho" style={{ marginBottom: 8 }}>
+            <h2 style={{ margin: 0 }}>Resumo para o WhatsApp</h2>
+            <BotaoCopiar texto={textoWhatsApp(resumo, hoje)} />
+          </div>
+          <p className="small muted" style={{ marginTop: 0 }}>
+            Concluídos nos últimos 3 dias úteis (desde {dataBR(somarDias(resumo.desde, 1))}). É a mensagem que irá para o grupo dos diretores.
+          </p>
+          <pre className="whats">{textoWhatsApp(resumo, hoje)}</pre>
+        </section>
+      )}
     </div>
   );
 }
@@ -133,5 +157,104 @@ function LinhaObjetivo({ o, admin }: { o: Objetivo; admin: boolean }) {
         <span className={`badge ${s.cor}`}>{s.nome}</span>
       </div>
     </div>
+  );
+}
+
+const ROTULO_ANDAMENTO: Record<string, { nome: string; cor: string }> = {
+  fazendo: { nome: "Fazendo", cor: "ok" },
+  em_validacao: { nome: "Em testes", cor: "mute" },
+  bloqueada: { nome: "Bloqueada", cor: "warn" },
+};
+
+/** Círculo azul com seta (fazendo), roxo-acinzentado com frasco (testes) ou âmbar com pausa (bloqueada). */
+function IconeAndamento({ status }: { status: string }) {
+  return (
+    <svg className={`check-ico andamento-${status}`} width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="10" />
+      {status === "bloqueada" ? (
+        <path d="M8 6.5v7M12 6.5v7" fill="none" strokeWidth="2" strokeLinecap="round" />
+      ) : status === "em_validacao" ? (
+        <path d="M8.3 5.5h3.4M9 5.5v3.6l-3 5a.8.8 0 00.7 1.2h6.6a.8.8 0 00.7-1.2l-3-5V5.5" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M8 6.3l5 3.7-5 3.7z" fill="#fff" strokeWidth="1" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
+}
+
+function Check() {
+  return (
+    <svg className="check-ico" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="10" />
+      <path d="M5.5 10.3l3 3 6-6.3" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Saúde geral: cor, % feito x esperado, tarefas e a régua dos objetivos por situação. */
+function PainelSaude({ s, entreguesMes }: { s: Saude; entreguesMes: number }) {
+  const cor = COR_SAUDE[s.cor];
+  const pctObj = (n: number) => (s.objetivos ? Math.round((100 * n) / s.objetivos) : 0);
+  const segmentos = [
+    ["ok", s.em_dia, "Em dia"],
+    ["warn", s.em_risco, "Em risco"],
+    ["late", s.atrasados, "Atrasados"],
+  ] as const;
+  return (
+    <section className={`summary saude saude-${s.cor}`} aria-label="Saúde do roadmap">
+      <div className="saude-topo">
+        <div className="saude-selo">
+          <span className="saude-luz" aria-hidden="true" />
+          <div>
+            <div className="saude-nome">{cor.nome}</div>
+            <div className="small muted">{cor.frase}</div>
+          </div>
+        </div>
+        <div className="saude-numeros">
+          <div>
+            <div className="n">{s.pct}%</div>
+            <div className="l">
+              feito · {s.tarefas_concluidas} de {s.tarefas} tarefas
+            </div>
+          </div>
+          {s.pct_esperado != null && s.pct_real_com_prazo != null && (
+            <div title="Só objetivos com início previsto e prazo: quanto já foi feito e quanto o calendário pede até hoje">
+              <div className={`n${s.pct_real_com_prazo < s.pct_esperado ? " txt-late" : ""}`}>
+                {s.pct_real_com_prazo}% <small className="muted">/ {s.pct_esperado}%</small>
+              </div>
+              <div className="l">no ritmo (feito / esperado)</div>
+            </div>
+          )}
+          <div>
+            <div className={`n${s.tarefas_atrasadas ? " txt-late" : ""}`}>{s.tarefas_atrasadas}</div>
+            <div className="l">tarefas atrasadas</div>
+          </div>
+        </div>
+      </div>
+      <div className="barra alta" title={`${s.pct}% das tarefas feito`}>
+        <span style={{ width: `${s.pct}%` }} />
+      </div>
+
+      <h3 className="small muted" style={{ margin: "18px 0 6px" }}>
+        {s.objetivos} objetivos em acompanhamento
+      </h3>
+      <div className="bar" role="img" aria-label={segmentos.map(([, n, nome]) => `${n} ${nome.toLowerCase()}`).join(", ")}>
+        {segmentos.map(([k, n]) => (n ? <span key={k} className={`b-${k}`} style={{ flex: n }} /> : null))}
+      </div>
+      <div className="tiles" style={{ marginTop: 12 }}>
+        {segmentos.map(([k, n, nome]) => (
+          <div key={k} className={`tile ${k}`}>
+            <div className="n">
+              {n} <small>{pctObj(n)}%</small>
+            </div>
+            <div className="l">{nome}</div>
+          </div>
+        ))}
+        <div className="tile done">
+          <div className="n">{entreguesMes}</div>
+          <div className="l">Entregues no mês</div>
+        </div>
+      </div>
+    </section>
   );
 }

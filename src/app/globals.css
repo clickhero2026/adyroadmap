@@ -211,6 +211,48 @@ dialog.janela p { margin: 0; }
 dialog.janela .atalhos { display: flex; flex-wrap: wrap; gap: 6px; }
 button.chip { padding: 4px 10px; font-size: 13px; border-radius: 99px; }
 
+/* Saúde do roadmap (Diretores) */
+.b-ok { background: var(--ok); }
+.b-warn { background: var(--warn); }
+.b-late { background: var(--late); }
+.saude { --cor-saude: var(--done); border-top: 6px solid var(--cor-saude); }
+.saude-amarelo { --cor-saude: var(--warn); }
+.saude-vermelho { --cor-saude: var(--late); }
+.saude-topo { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.saude-selo { display: flex; gap: 12px; align-items: center; }
+.saude-luz { width: 22px; height: 22px; border-radius: 50%; background: var(--cor-saude); box-shadow: 0 0 0 6px color-mix(in srgb, var(--cor-saude) 18%, transparent); flex: none; }
+.saude-nome { font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--cor-saude); }
+.saude-numeros { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.saude-numeros .n { font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.saude-numeros .l { color: var(--muted); font-size: 13px; }
+.txt-late { color: var(--late); }
+.barra.alta { height: 14px; border-radius: 7px; }
+.barra.alta span { background: var(--cor-saude); }
+.tile .n small { font-size: 14px; font-weight: 600; color: var(--muted); margin-left: 4px; }
+
+/* Na última semana: checks verdes */
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.checks li { display: flex; gap: 10px; align-items: flex-start; }
+.check-ico { flex: none; margin-top: 1px; }
+.check-ico circle { fill: var(--done); }
+.check-ico path { stroke: #fff; }
+.checks.entregas li { background: color-mix(in srgb, var(--done) 8%, transparent); border-radius: 10px; padding: 10px 12px; }
+.selo-entregue { display: inline-block; font-size: 11.5px; font-weight: 600; color: var(--done); border: 1px solid color-mix(in srgb, var(--done) 40%, transparent); border-radius: 99px; padding: 0 8px; margin-left: 4px; }
+
+/* Prévia da mensagem do WhatsApp */
+pre.whats { white-space: pre-wrap; font-family: var(--font-body, inherit); font-size: 14px; line-height: 1.5; background: color-mix(in srgb, var(--done) 7%, var(--surface)); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 0; max-width: 520px; }
+.saude-numeros .n small { font-size: 16px; font-weight: 600; }
+.check-ico.andamento-fazendo circle { fill: var(--doing); }
+.check-ico.andamento-em_validacao circle { fill: var(--next); }
+.check-ico.andamento-bloqueada circle { fill: var(--warn); }
+.checks .badge { flex: none; align-self: center; }
+
+/* WhatsApp */
+.ok-msg { background: color-mix(in srgb, var(--done) 12%, transparent); color: var(--done); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+.qr-bloco { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+.qr-bloco img { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 8px; max-width: 100%; height: auto; }
+.qr-bloco ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 420px; }
+.badge.done { color: var(--done); background: color-mix(in srgb, var(--done) 10%, transparent); }
 /* Objetivos dentro da tela de áreas */
 .objetivos-area summary { cursor: pointer; color: var(--doing); font-weight: 500; }
 .objetivos-area ul { margin: 8px 0; padding-left: 18px; display: grid; gap: 6px; }
