@@ -38,6 +38,8 @@ export const areas = pgTable("areas", {
   id: serial("id").primaryKey(),
   nome: text("nome").notNull().unique(),
   ordem: integer("ordem").notNull().default(0),
+  // Chave do ícone (ver src/components/Icones.tsx). Separada do nome para sobreviver a renomeações.
+  icone: text("icone"),
 });
 
 export const objetivos = pgTable("objetivos", {

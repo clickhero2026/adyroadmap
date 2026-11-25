@@ -7,8 +7,11 @@ import {
   ErroValidacao,
   atualizarTarefa,
   criarTarefa,
+  atualizarArea,
   atualizarUsuario,
+  criarArea,
   criarUsuario,
+  excluirArea,
   excluirObjetivo,
   excluirTarefa,
   excluirUsuario,
@@ -52,10 +55,10 @@ export async function acaoMudarStatus(form: FormData) {
 }
 
 /** Usado pelo quadro de tarefas (arrastar ou trocar no menu): responde sem redirecionar. */
-export async function acaoMoverTarefa(id: number, status: string): Promise<{ erro?: string }> {
+export async function acaoMoverTarefa(id: number, status: string, prazo?: string): Promise<{ erro?: string }> {
   await exigirAdmin();
   try {
-    await atualizarTarefa(id, { status });
+    await atualizarTarefa(id, prazo ? { status, prazo } : { status });
   } catch (e) {
     if (e instanceof ErroValidacao) return { erro: e.message };
     throw e;
@@ -127,4 +130,18 @@ export async function acaoExcluirUsuario(form: FormData) {
   const id = Number(form.get("id"));
   const eu = await exigirAdmin();
   await tentar("/app/usuarios", () => excluirUsuario(id, eu.id));
+}
+
+export async function acaoCriarArea(form: FormData) {
+  await tentar("/app/areas", () => criarArea(campos(form)));
+}
+
+export async function acaoAtualizarArea(form: FormData) {
+  const id = Number(form.get("id"));
+  await tentar("/app/areas", () => atualizarArea(id, campos(form)));
+}
+
+export async function acaoExcluirArea(form: FormData) {
+  const id = Number(form.get("id"));
+  await tentar("/app/areas", () => excluirArea(id));
 }

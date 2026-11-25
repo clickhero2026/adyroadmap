@@ -29,6 +29,13 @@
       "when": 1795612757688,
       "tag": "0003_papeis",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795618127678,
+      "tag": "0004_icone_area",
+      "breakpoints": true
     }
   ]
 }
