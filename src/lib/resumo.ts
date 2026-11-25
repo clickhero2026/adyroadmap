@@ -12,12 +12,22 @@ function lista(itens: string[]) {
 
 const curto = (s: string, n = 60) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
+/** Sprint da semana: segunda a sexta da semana de `hoje` (sábado e domingo ficam na semana que acabou). */
+export function sprint(hoje: string): [string, string] {
+  const dia = new Date(`${hoje}T12:00:00Z`).getUTCDay(); // 0 = domingo
+  const seg = somarDias(hoje, -((dia + 6) % 7));
+  return [seg, somarDias(seg, 4)];
+}
+
 export function textoWhatsApp(r: Resumo, hoje: string, link?: string) {
   const s = r.saude;
   const cor = COR_SAUDE[s.cor];
   const partes: string[] = [];
 
-  partes.push(`🗺️ *ÚLTIMAS ATUALIZAÇÕES DO ROADMAP ady* · ${dataBR(hoje).slice(0, 5)}`);
+  const [seg, sex] = sprint(hoje);
+  partes.push(
+    `🗺️ *ÚLTIMAS ATUALIZAÇÕES DO ROADMAP ady* · ${dataBR(hoje).slice(0, 5)}\nSprint do dia ${dataBR(seg).slice(0, 5)} a ${dataBR(sex).slice(0, 5)}`,
+  );
   partes.push(
     `${cor.emoji} *${cor.frase}* · ${s.pct}% feito (${s.tarefas_concluidas} de ${s.tarefas} tarefas)`,
   );
@@ -26,7 +36,7 @@ export function textoWhatsApp(r: Resumo, hoje: string, link?: string) {
     ...r.entregues.map((o) => `🎉 *${curto(o.nome)}* entregue`),
     ...r.concluidas.map((t) => `${curto(t.titulo, 50)} _(${curto(t.objetivo_nome, 32)})_`),
   ];
-  partes.push(`✅ *Concluído desde ${dataBR(somarDias(r.desde, 1)).slice(0, 5)}*\n${prontos.length ? lista(prontos) : "• Nada concluído no período"}`);
+  partes.push(`✅ *Concluídos*\n${prontos.length ? lista(prontos) : "• Nada concluído no período"}`);
 
   if (r.fazendo.length) {
     partes.push(`🔨 *Em andamento*\n${lista(r.fazendo.map((f) => `${curto(f.objetivo_nome)} · ${f.pct}%`))}`);
