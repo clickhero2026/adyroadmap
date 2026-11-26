@@ -1,41 +1,23 @@
-// Roadmap público (vitrine de roadmap.useady.com.br). Sem login, sem atrasos, sem notas internas
-// e sem itens marcados como só internos (onboarding, planos, pagamentos etc.).
-import Link from "next/link";
+// Roadmap público (vitrine de roadmap.useady.com.br) no formato de "Novidades". Sem login, sem atrasos,
+// sem notas internas e sem itens marcados como só internos (onboarding, planos, pagamentos etc.).
 import { listarObjetivosPublicos } from "@/lib/dados";
-import { Legenda, Panorama, QuadroPorArea, QuadroPorFase, Resumo } from "@/components/Roadmap";
+import { Resumo } from "@/components/Roadmap";
+import { Novidades } from "@/components/Novidades";
 
 export const dynamic = "force-dynamic";
 
-export default async function RoadmapPublico({
-  searchParams,
-}: {
-  searchParams: Promise<{ por?: string }>;
-}) {
-  const { por } = await searchParams;
+export default async function RoadmapPublico() {
   const itens = await listarObjetivosPublicos();
-  const porArea = por === "area";
   return (
-    <div className="wrap">
+    <div className="wrap" style={{ maxWidth: 1080 }}>
       <header className="cabecalho">
         <div>
-          <h1>Roadmap do ady</h1>
-          <p>Tudo o que o ady já faz e o que vem por aí.</p>
+          <h1>Novidades do ady</h1>
+          <p>O que já entregamos e o que vem por aí.</p>
         </div>
       </header>
       <Resumo itens={itens} interno={false} />
-      <Panorama itens={itens} interno={false} />
-      <div className="cabecalho">
-        <Legenda interno={false} />
-        <div className="filtros" aria-label="Organização">
-          <Link href="/" aria-current={!porArea}>
-            Por situação
-          </Link>
-          <Link href="/?por=area" aria-current={porArea}>
-            Por área
-          </Link>
-        </div>
-      </div>
-      {porArea ? <QuadroPorArea itens={itens} interno={false} /> : <QuadroPorFase itens={itens} interno={false} />}
+      <Novidades itens={itens} />
       <footer>
         Este roadmap mostra a direção do produto e pode mudar. Datas e ordem dependem do andamento do
         desenvolvimento.

@@ -69,6 +69,15 @@ export function FormObjetivo({ o, areas, areaInicial }: { o?: Objetivo | null; a
         Descrição pública (texto do roadmap público)
         <textarea name="descricao_publica" defaultValue={o?.descricao_publica ?? ""} maxLength={500} />
       </label>
+      <label>
+        Benefícios para o usuário (até 3, um por linha; viram os tópicos do cartão no roadmap público)
+        <textarea
+          name="beneficios"
+          rows={3}
+          defaultValue={o?.beneficios ?? ""}
+          placeholder={"Ex.: Anúncios prontos em poucos minutos\nComece com R$ 7 por dia"}
+        />
+      </label>
       <div className="linha">
         <label className="check">
           <input type="checkbox" name="publico" defaultChecked={o?.publico ?? false} />

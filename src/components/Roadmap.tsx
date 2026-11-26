@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FASES, STATUS_OBJETIVO, nomeMarcacao } from "@/lib/rotulos";
 import { IconeArea } from "./Icones";
+import { Beneficios, Etiqueta } from "./Novidades";
 
 export type ItemRoadmap = {
   id: number;
@@ -9,6 +10,8 @@ export type ItemRoadmap = {
   area_ordem: number;
   area_icone?: string | null;
   descricao_publica: string | null;
+  beneficios?: string | null;
+  tipo?: string;
   fase: string;
   // só na visão interna
   status?: string;
@@ -72,8 +75,9 @@ function Cartao({ i, interno, editavel }: { i: ItemRoadmap; interno: boolean; ed
         <IconeArea area={i.area_nome} icone={i.area_icone} size={15} />
         {i.area_nome}
       </span>
+      {i.tipo && i.tipo !== "funcionalidade" && <Etiqueta tipo={i.tipo} />}
       <h4>{editavel ? <Link href={`/app/objetivos/${i.id}`}>{i.nome}</Link> : i.nome}</h4>
-      {i.descricao_publica && <p>{i.descricao_publica}</p>}
+      <Beneficios beneficios={i.beneficios ?? null} descricao={i.descricao_publica} />
       {interno && <Selos i={i} />}
       {interno && i.nota_interna && (
         <div className="note">
