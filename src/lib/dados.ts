@@ -20,6 +20,7 @@ export type Objetivo = {
   iniciado_em: string | null;
   entregue_em: string | null;
   descricao_publica: string | null;
+  beneficios: string | null;
   publico: boolean;
   marcacao: string | null;
   nota_interna: string | null;
@@ -56,20 +57,25 @@ export async function listarAreas() {
 }
 
 export async function listarObjetivos() {
-  return db()<Objetivo[]>`SELECT o.*, a.icone AS area_icone FROM v_objetivos o JOIN areas a ON a.id = o.area_id ORDER BY o.area_ordem, o.prioridade, o.nome`;
+  return db()<Objetivo[]>`
+    SELECT o.*, a.icone AS area_icone, ob.beneficios
+    FROM v_objetivos o JOIN areas a ON a.id = o.area_id JOIN objetivos ob ON ob.id = o.id
+    ORDER BY o.area_ordem, o.prioridade, o.nome`;
 }
 
 /** Roadmap público: só o que está marcado como público, sem cancelados nem notas internas. */
 export async function listarObjetivosPublicos() {
-  return db()<Pick<Objetivo, "id" | "nome" | "area_nome" | "area_ordem" | "area_icone" | "descricao_publica" | "fase">[]>`
-    SELECT o.id, o.nome, o.area_nome, o.area_ordem, a.icone AS area_icone, o.descricao_publica, o.fase
-    FROM v_objetivos o JOIN areas a ON a.id = o.area_id
+  return db()<
+    Pick<Objetivo, "id" | "nome" | "tipo" | "area_nome" | "area_ordem" | "area_icone" | "descricao_publica" | "beneficios" | "fase" | "entregue_em">[]
+  >`
+    SELECT o.id, o.nome, o.tipo, o.area_nome, o.area_ordem, a.icone AS area_icone, o.descricao_publica, ob.beneficios, o.fase, o.entregue_em
+    FROM v_objetivos o JOIN areas a ON a.id = o.area_id JOIN objetivos ob ON ob.id = o.id
     WHERE o.publico AND o.status <> 'cancelado'
     ORDER BY o.area_ordem, o.nome`;
 }
 
 export async function buscarObjetivo(id: number) {
-  const [o] = await db()<Objetivo[]>`SELECT * FROM v_objetivos WHERE id = ${id}`;
+  const [o] = await db()<Objetivo[]>`SELECT v.*, ob.beneficios FROM v_objetivos v JOIN objetivos ob ON ob.id = v.id WHERE v.id = ${id}`;
   return o ?? null;
 }
 
@@ -232,6 +238,7 @@ export async function salvarObjetivo(id: number | null, d: DadosObjetivo) {
     iniciado_em: data(d.iniciado_em, "Iniciado em"),
     entregue_em: data(d.entregue_em, "Entregue em"),
     descricao_publica: texto(d.descricao_publica, 500),
+    beneficios: beneficios(d.beneficios),
     publico: d.publico === true || d.publico === "on" || d.publico === "true",
     marcacao,
     nota_interna: texto(d.nota_interna, 2000),
@@ -246,6 +253,17 @@ export async function salvarObjetivo(id: number | null, d: DadosObjetivo) {
   }
   const [row] = await sql<{ id: number }[]>`INSERT INTO objetivos ${sql(v)} RETURNING id`;
   return row.id;
+}
+
+/** Até 3 benefícios, um por linha, sem marcadores digitados (•, -, *). */
+function beneficios(v: unknown) {
+  const linhas = String(v ?? "")
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*[•\-*·]\s*/, "").trim())
+    .filter(Boolean);
+  if (linhas.length > 3) throw new ErroValidacao("Use no máximo 3 benefícios, um por linha");
+  if (linhas.some((l) => l.length > 100)) throw new ErroValidacao("Cada benefício pode ter até 100 caracteres");
+  return linhas.length ? linhas.join("\n") : null;
 }
 
 export async function marcarEntregue(id: number, entregue: boolean) {

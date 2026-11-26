@@ -58,6 +58,8 @@ export const objetivos = pgTable("objetivos", {
   iniciadoEm: date("iniciado_em"),
   entregueEm: date("entregue_em"),
   descricaoPublica: text("descricao_publica"),
+  // Até 3 benefícios para o usuário, um por linha. Viram os tópicos do cartão no roadmap público.
+  beneficios: text("beneficios"),
   // Novo objetivo nasce fora do roadmap público; aparecer lá é uma decisão explícita.
   publico: boolean("publico").notNull().default(false),
   marcacao: marcacao("marcacao"),
