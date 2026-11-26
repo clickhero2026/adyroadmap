@@ -117,7 +117,7 @@ test("objetivo atrasado: passou do prazo", async () => {
   assert.equal((await obj(o)).status, "atrasado");
 });
 
-test("objetivo atrasado pelo ritmo: mais de 25 pontos abaixo do esperado", async () => {
+test("objetivo abaixo do ritmo fica em risco, nunca atrasado", async () => {
   // início 14/11, prazo 04/12: hoje (24/11) é 50% do caminho
   const o = await objetivo({ inicio_previsto: "2026-11-14", prazo: "2026-12-04" });
   await tarefa(o, { peso: 1, status: "concluida" });
@@ -126,18 +126,18 @@ test("objetivo atrasado pelo ritmo: mais de 25 pontos abaixo do esperado", async
   assert.equal(r.pct_esperado, 50);
   assert.equal(r.pct, 25);
   assert.equal(r.status, "em_risco");
-  await tarefa(o, { peso: 3, status: "a_fazer", prazo: "2026-12-04" }); // 14%: 36 abaixo -> atrasado
+  await tarefa(o, { peso: 3, status: "a_fazer", prazo: "2026-12-04" }); // 14%: 36 abaixo -> continua em risco
   r = await obj(o);
-  assert.equal(r.status, "atrasado");
+  assert.equal(r.status, "em_risco");
 });
 
-test("objetivo em risco: tarefa atrasada ou bloqueada", async () => {
+test("tarefa bloqueada deixa o objetivo em risco; tarefa atrasada deixa atrasado", async () => {
   const o = await objetivo({ prazo: "2026-12-31" });
   await tarefa(o, { status: "bloqueada", prazo: "2026-12-20" });
   assert.equal((await obj(o)).status, "em_risco");
   const o2 = await objetivo({ prazo: "2026-12-31" });
   await tarefa(o2, { status: "fazendo", prazo: "2026-11-01" });
-  assert.equal((await obj(o2)).status, "em_risco");
+  assert.equal((await obj(o2)).status, "atrasado");
 });
 
 test("objetivo em dia dentro do ritmo", async () => {

@@ -19,8 +19,9 @@ são calculados no banco, nas views de `drizzle/0001_regras.sql`, e todas as tel
 
 - **% do objetivo** = peso das tarefas concluídas ÷ peso de todas (P=1, M=2, G=3). Em validação conta 0; cancelada sai da conta.
 - **Tarefa atrasada**: passou do prazo. **Em risco**: bloqueada, ou faltam 2 dias úteis ou menos e ainda está em A fazer.
-- **Objetivo atrasado**: passou do prazo, ou está mais de 25 pontos abaixo do % esperado pelo ritmo
-  (`(hoje − início previsto) ÷ (prazo − início previsto)`). **Em risco**: tem tarefa atrasada ou bloqueada, ou 10 a 25 pontos abaixo.
+- **Objetivo atrasado**: passou do prazo ou tem tarefa atrasada (o mesmo sentido do quadro de tarefas).
+  **Em risco**: tem tarefa bloqueada, ou está 10 pontos ou mais abaixo do % esperado pelo ritmo
+  (`(hoje − início previsto) ÷ (prazo − início previsto)`). Ficar abaixo do ritmo nunca marca atrasado.
 - **Entregue**: "Entregue em" preenchido e nenhuma tarefa aberta (botão "Marcar como entregue" no objetivo).
 - Marcações manuais: Adiado e Cancelado vencem o cálculo; A confirmar e A rever são só selos.
 - Prazo é obrigatório para mover uma tarefa para Fazendo, Em validação ou Bloqueada.
