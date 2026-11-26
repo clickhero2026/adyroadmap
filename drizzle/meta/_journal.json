@@ -57,6 +57,13 @@
       "when": 1795720287543,
       "tag": "0007_beneficios",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795723389268,
+      "tag": "0008_atrasado_sem_ritmo",
+      "breakpoints": true
     }
   ]
 }
